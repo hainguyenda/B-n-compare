@@ -43,7 +43,7 @@
       <span class="msg" style="color:var(--text)">Khung hình:</span>
       <select id="fmt"><option value="land">16:9 · YouTube</option><option value="port">9:16 · Shorts / TikTok</option></select>
       <span class="msg" style="color:var(--text)">Kiểu hình:</span>
-      <select id="vmode"><option value="auto">Theo code (mode)</option><option value="map">Bản đồ sáng lên</option><option value="stack">Cột 3D to dần</option><option value="split">Cột 3D + bản đồ nhỏ</option><option value="ball">Countryball nhí nhảnh</option></select>
+      <select id="vmode"><option value="auto">Theo code (mode)</option><option value="map">Bản đồ sáng lên</option><option value="stack">Cột 3D to dần</option><option value="split">Cột 3D + bản đồ nhỏ</option><option value="ball">Countryball nhí nhảnh</option><option value="globe">Quả địa cầu xoay</option><option value="bubble">Bong bóng trên bản đồ</option></select>
       <span class="msg" style="color:var(--text)">Nền bóng:</span>
       <select id="btheme"><option value="auto">Tự đổi (trời xanh → hoàng hôn)</option><option value="comic_sky">Trời xanh</option><option value="sunset_drama">Hoàng hôn</option><option value="studio_dark">Studio tối</option></select>
       <span id="msg" class="msg">Đang tải bản đồ…</span>
@@ -92,7 +92,7 @@
       <tr><td>question</td><td>Câu hỏi hiện ở cuối chế độ quick, ví dụ "Did you guess #1? Tell us below".</td></tr>
       <tr><td>suspense</td><td>Số giây dừng lại trước nước #1 (mặc định 0.9 Shorts / 1.1 video dài). Đặt 0 để tắt.</td></tr>
       <tr><td>music</td><td>"gen" · "fast" (nhịp nhanh cho Shorts) · "off". Bạn vẫn có thể chọn file nhạc riêng ở ô Nhạc nền.</td></tr>
-      <tr><td>mode</td><td>"map": bản đồ sáng lên · "stack": cột 3D to dần, nước đứng đầu vọt lên cuối video · "split": cột 3D kèm bản đồ nhỏ góc phải. Có thể ép bằng ô "Kiểu hình".</td></tr>
+      <tr><td>mode</td><td>"map": bản đồ sáng lên · "stack": cột 3D to dần, nước đứng đầu vọt lên cuối video · "split": cột 3D kèm bản đồ nhỏ góc phải. Có thể ép bằng ô "Kiểu hình". · "globe": quả địa cầu xoay tới từng nước, cột sáng cao theo giá trị · "bubble": bong bóng to theo giá trị mọc lên trên bản đồ</td></tr>
       <tr><td>visualStyle, ballTheme</td><td>"visualStyle": "countryball" bật chế độ bóng quốc gia nhí nhảnh (hoặc chọn ô Kiểu hình = Countryball nhí nhảnh; cũng có thể viết "mode": "ball"). "ballTheme": "comic_sky" (trời xanh) · "sunset_drama" (hoàng hôn) · "studio_dark" (nền tối). Bỏ trống thì tự đổi từ trời xanh sang hoàng hôn khi vào Top 3.</td></tr>
       <tr><td>stack</td><td>Chất liệu cột: "people" (đám đông) · "money" (tiền) · "gold" (vàng) · "oil" (thùng dầu) · "crops" (nông sản) · "cubes" (khối màu). Bỏ trống thì app tự đoán theo tiêu đề.</td></tr>
       <tr><td>scale</td><td>"linear" (mặc định) · "hybrid" khi nước đầu quá vượt trội · "volume" lấy căn bậc 3.</td></tr>
@@ -680,6 +680,132 @@ function drawStackFrame(t, mode) {
   ctx.restore();
 }
 
+// ================= GLOBE MODE: the globe turns to each country, a light beam rises as tall as its value =================
+const STARS = Array.from({ length: 220 }, (_, i) => { const r = k => { const s = Math.sin(i * 127.1 + k * 311.7) * 43758.5453; return s - Math.floor(s); }; return [r(1), r(2), .4 + r(3) * 1.6, r(4) * 6.28]; });
+let GRAT = null;
+function globeGeom() { return PORT ? { cx: W / 2, cy: H * .5, R: W * .44 } : { cx: W * .64, cy: H * .53, R: H * .41 }; }
+function globeCam(t) { // centre of view [lon, lat] and zoom
+  const { items, intro } = S, n = items.length, ci = ciAt(t), ll = i => items[Math.max(0, Math.min(n - 1, i))].m.ll || [0, 0], spin = (p, d) => [p[0] + d, p[1]];
+  if (ci < 0) { const f = ll(0), k = easeIO(clamp(t / Math.max(.5, intro))); return { c: d3.geoInterpolate(spin(f, 110), f)(k), z: .92 + .08 * k }; }
+  if (ci >= n) { const to = t - (intro + S.itemsT); return { c: spin(ll(n - 1), to * 14), z: 1.06 - .16 * eout(seg(to, 0, 1.2)) }; }
+  const tau0 = t - intro - S.st[ci], ps = S.pause[ci], tau = tau0 - ps, pc = S.dur[ci] - ps, camT = Math.min(1, Math.max(.45, pc * .4));
+  const from0 = ci > 0 ? ll(ci - 1) : ll(0), from = ps > 0 ? spin(from0, 10 * ps) : from0, zb = ps > 0 ? .94 : 1;
+  if (tau < 0) return { c: spin(from0, 10 * tau0), z: 1 - .06 * seg(tau0, 0, .6) }; // waiting for #1: drift and pull back
+  const k = easeIO(clamp(tau / camT)), hop = Math.sin(Math.PI * k) * Math.min(.2, d3.geoDistance(from, ll(ci)) * .12), e = eout(seg(tau, camT * .5, camT + .4));
+  return { c: d3.geoInterpolate(from, ll(ci))(k), z: zb + (1.06 - zb) * e - hop };
+}
+function quickQuestion(to, TL) { // closing question pill (quick outro), shared by globe and bubble modes
+  const { cfg } = S; if (S.outMode !== "quick" || to <= TL + S.spotT) return;
+  const q = String(cfg.question || (cfg.outro && cfg.outro.cta && cfg.outro.cta.length < 60 ? cfg.outro.cta : "Did you guess #1? Tell us below"));
+  const a = eout(seg(to, TL + S.spotT, TL + S.spotT + .3)), qy = PORT ? H * .92 : H * .93;
+  ctx.save(); ctx.globalAlpha = a; ctx.textAlign = "center"; ctx.textBaseline = "middle"; fit(q, PORT ? 46 : 44, 900, W - 120);
+  const tw = ctx.measureText(q).width, ph = PORT ? 92 : 80;
+  ctx.fillStyle = "rgba(8,12,24,.88)"; ctx.strokeStyle = "#FFD23F"; ctx.lineWidth = 3; ctx.beginPath(); ctx.roundRect(W / 2 - tw / 2 - 36, qy - ph / 2, tw + 72, ph, ph / 2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#fff"; ctx.fillText(q, W / 2, qy + 2); ctx.restore();
+}
+function drawGlobeFrame(t) {
+  const { cfg, items, intro, accent } = S, n = items.length, ci = ciAt(t), live = ci >= 0 && ci < n, inOut = ci >= n;
+  const tau0 = live ? t - intro - S.st[ci] : 0, ps = live ? S.pause[ci] : 0, tau = Math.max(0, tau0 - ps), inPause = live && tau0 < ps;
+  const pc = live ? S.dur[ci] - ps : S.per, to = inOut ? t - (intro + S.itemsT) : 0;
+  const G = globeGeom(), cam = globeCam(t), R = G.R * cam.z;
+  ctx.save(); ctx.globalAlpha = 1; ctx.shadowBlur = 0; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic"; ctx.lineJoin = "round";
+  // space, stars, atmosphere
+  let g = ctx.createRadialGradient(G.cx, G.cy, R * .5, G.cx, G.cy, Math.max(W, H)); g.addColorStop(0, "#0b1a3a"); g.addColorStop(1, "#02040b"); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = "#fff"; STARS.forEach(([x, y, r, ph]) => { ctx.globalAlpha = .3 + .3 * Math.sin(t * 1.3 + ph); ctx.beginPath(); ctx.arc(x * W, y * H, r, 0, 7); ctx.fill(); }); ctx.globalAlpha = 1;
+  g = ctx.createRadialGradient(G.cx, G.cy, R * .97, G.cx, G.cy, R * 1.16); g.addColorStop(0, "rgba(96,165,250,.55)"); g.addColorStop(1, "rgba(96,165,250,0)"); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(G.cx, G.cy, R * 1.16, 0, 7); ctx.fill();
+  const proj = d3.geoOrthographic().translate([G.cx, G.cy]).scale(R).rotate([-cam.c[0], -cam.c[1]]).clipAngle(90), path = d3.geoPath(proj, ctx);
+  g = ctx.createRadialGradient(G.cx - R * .35, G.cy - R * .4, R * .1, G.cx, G.cy, R); g.addColorStop(0, "#1e4f8f"); g.addColorStop(1, "#071a3d"); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(G.cx, G.cy, R, 0, 7); ctx.fill();
+  GRAT = GRAT || d3.geoGraticule().step([20, 20])(); ctx.strokeStyle = "rgba(255,255,255,.07)"; ctx.lineWidth = 1; ctx.beginPath(); path(GRAT); ctx.stroke();
+  // countries: dim until counted, full colour once counted, the current one glows
+  const idx = new Map(items.map((x, i) => [x.m, i]));
+  C.forEach(c => { if (!c.f) return; const i = idx.get(c), on = i !== undefined && (i < ci || inOut);
+    ctx.beginPath(); path(c.f); ctx.globalAlpha = on ? .95 : .34; ctx.fillStyle = c.col; ctx.fill(); ctx.globalAlpha = 1; ctx.strokeStyle = "rgba(6,12,30,.7)"; ctx.lineWidth = .8; ctx.stroke(); });
+  if (live && !inPause) { const m = items[ci].m, p = eout(seg(tau, 0, .4)); ctx.save(); ctx.beginPath(); path(m.f); ctx.globalAlpha = p; ctx.fillStyle = m.col; ctx.fill();
+    ctx.shadowColor = "#fff"; ctx.shadowBlur = 22; ctx.strokeStyle = "#fff"; ctx.lineWidth = 2.5; ctx.stroke(); ctx.restore(); }
+  { const vn = BY.VN, i = vn ? idx.get(vn) : undefined; // Hoàng Sa + Trường Sa stay with Vietnam on the globe too
+    if (i !== undefined && (i < ci || inOut || (live && i === ci && !inPause))) [[112.0, 16.5], [114.0, 10.0]].forEach(ll => { if (d3.geoDistance(ll, cam.c) > 1.5) return; const q = proj(ll); if (!q) return;
+      ctx.save(); ctx.fillStyle = vn.col; ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(q[0], q[1], Math.max(3, R * .009), 0, 7); ctx.fill(); ctx.stroke(); ctx.restore(); }); }
+  // night side shading + rim
+  g = ctx.createRadialGradient(G.cx - R * .3, G.cy - R * .35, R * .2, G.cx, G.cy, R * 1.02); g.addColorStop(0, "rgba(255,255,255,.07)"); g.addColorStop(.7, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(0,0,10,.55)");
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(G.cx, G.cy, R, 0, 7); ctx.fill(); ctx.strokeStyle = "rgba(147,197,253,.45)"; ctx.lineWidth = 2; ctx.stroke();
+  // light beams
+  const vmax = Math.max(...items.map(x => mscale(x.value, cfg))) || 1, BH = R * (PORT ? .95 : .9), beams = [];
+  items.forEach((x, i) => { const cur = live && i === ci; if (!(i < ci || inOut || (cur && !inPause))) return;
+    const ll = x.m.ll, d = ll ? d3.geoDistance(ll, cam.c) : 9; if (d > 1.5) return; const p = proj(ll); if (!p) return;
+    const gr = cur ? eout(seg(tau, .15, Math.max(.5, pc * .55))) : 1;
+    beams.push({ x, p, cur, a: clamp((1.5 - d) / .35), h: Math.max(8, mscale(x.value, cfg) / vmax * BH * gr), gr }); });
+  beams.sort((a, b) => a.p[1] - b.p[1]).forEach(b => {
+    const w = R * (b.cur ? .05 : .03), [x, y] = b.p, top = y - b.h, col = b.x.m.col;
+    ctx.save(); ctx.globalAlpha = b.a;
+    ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.beginPath(); ctx.ellipse(x, y, w * 1.3, w * .45, 0, 0, 7); ctx.fill();
+    const bg2 = ctx.createLinearGradient(0, y, 0, top); bg2.addColorStop(0, col); bg2.addColorStop(1, "rgba(255,255,255,.85)");
+    if (b.cur) { ctx.shadowColor = col; ctx.shadowBlur = 30; }
+    ctx.fillStyle = bg2; ctx.beginPath(); ctx.roundRect(x - w / 2, top, w, b.h, [w / 2, w / 2, 0, 0]); ctx.fill(); ctx.shadowBlur = 0;
+    ctx.fillStyle = "rgba(255,255,255,.55)"; ctx.fillRect(x - w * .12, top + w * .3, w * .24, Math.max(0, b.h - w * .3));
+    ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(x, y, w * .75, w * .28, 0, 0, 7); ctx.fill();
+    if (b.cur) { // flag + counting value on top of the beam
+      const fs = PORT ? 30 : 26, txt = short(b.x.value * b.gr); font(fs, 900); const fw = fs * 1.5, tw = ctx.measureText(txt).width, pw = fw + tw + 34, ph = fs * 1.7;
+      const px = clamp(x - pw / 2, 12, W - pw - 12), py = top - ph - 12;
+      ctx.fillStyle = "rgba(9,13,26,.92)"; ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.beginPath(); ctx.roundRect(px, py, pw, ph, ph / 2); ctx.fill(); ctx.stroke();
+      flagBox(b.x.code, px + 12, py + ph / 2 - fw * .34, fw, fw * .68, 4); ctx.fillStyle = "#fff"; ctx.textBaseline = "middle"; ctx.fillText(txt, px + fw + 22, py + ph / 2 + 1);
+    } else if (inOut && b.x.rank <= 3 || (!inOut && R > 300)) { // small flag caps (rank tag on the podium in the outro)
+      const fw = inOut ? R * .085 : R * .05; flagBox(b.x.code, x - fw / 2, top - fw * .75, fw, fw * .68, 3);
+      if (inOut) { font(Math.round(fw * .42), 900); ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineWidth = 5; ctx.strokeStyle = "rgba(5,8,18,.9)"; ctx.strokeText("#" + b.x.rank, x, top - fw * 1.05); ctx.fillStyle = "#FFD23F"; ctx.fillText("#" + b.x.rank, x, top - fw * 1.05); ctx.textAlign = "left"; }
+    }
+    ctx.restore();
+  });
+  if (live && items[ci].rank === 1 && !inPause && tau < .4) { ctx.globalAlpha = .55 * (1 - tau / .4); ctx.fillStyle = "#fff8dc"; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1; }
+  // header: what is on screen now
+  const cur = live ? items[ci] : inOut ? items[n - 1] : null, ttl = String(cfg.title || "").toUpperCase(), aC = live || inOut ? 1 : 0;
+  ctx.textBaseline = "alphabetic";
+  if (PORT) {
+    ctx.textAlign = "center"; ctx.fillStyle = "#fbbf24"; fit(ttl, 30, 800, W - 80); ctx.fillText(ttl, W / 2, 70);
+    if (cur && aC) { const pp = inPause ? 1 : eout(seg(tau, 0, .35)); ctx.globalAlpha = pp;
+      const nm = inPause ? "#1  ???" : "#" + cur.rank + "  " + cur.name; ctx.fillStyle = "#fff"; fit(nm, 72, 900, W - 80); ctx.fillText(nm, W / 2, 168);
+      const v = inPause ? "" : full(cur.value * (inOut ? 1 : eout(seg(tau, pc * .06, pc * .6)))) + (cfg.unit ? " " + cfg.unit : ""); ctx.fillStyle = accent; fit(v, 54, 800, W - 80); ctx.fillText(v, W / 2, 242); ctx.globalAlpha = 1; }
+    if (cfg.source) { ctx.fillStyle = "rgba(148,163,184,.75)"; fit(cfg.source, 20, 500, W - 60); ctx.fillText(cfg.source, W / 2, H - 24); }
+  } else {
+    const x0 = 56, pw = Math.min(560, W * .3);
+    ctx.textAlign = "left"; ctx.fillStyle = "#fbbf24"; fit(ttl, 24, 800, pw); ctx.fillText(ttl, x0, 70);
+    if (cur && aC) { const pp = inPause ? 1 : eout(seg(tau, 0, .35)); ctx.globalAlpha = pp;
+      font(110, 900); ctx.fillStyle = "#fff"; const rk = inPause ? "#1" : "#" + cur.rank; ctx.fillText(rk, x0, 200);
+      if (!inPause) flagBox(cur.code, x0 + ctx.measureText(rk).width + 26, 122, 112, 76, 8);
+      ctx.fillStyle = "#fff"; fit(inPause ? "???" : cur.name, 48, 800, pw); ctx.fillText(inPause ? "???" : cur.name, x0, 272);
+      const v = inPause ? "" : full(cur.value * (inOut ? 1 : eout(seg(tau, pc * .06, pc * .6)))); ctx.fillStyle = accent; fit(v, 46, 800, pw); ctx.fillText(v, x0, 334);
+      font(22, 500); ctx.fillStyle = "rgba(255,255,255,.55)"; ctx.fillText(cfg.unit || "", x0, 370); ctx.globalAlpha = 1; }
+    if (live || inOut) { ctx.strokeStyle = "rgba(255,255,255,.14)"; ctx.beginPath(); ctx.moveTo(x0, 404); ctx.lineTo(x0 + pw, 404); ctx.stroke();
+      if (inOut && cfg.outro && S.outMode === "full") { const o = cfg.outro; ctx.globalAlpha = eout(seg(to, .3, 1)); let y = wrap(o.big || "", x0, 480, 52, 800, pw, 62, "#fff"); y = wrap(o.text || "", x0, y + 16, 30, 600, pw, 40, "#fff"); if (o.cta) wrap(o.cta, x0, Math.max(y + 20, 900), 26, 600, pw, 36, "rgba(255,255,255,.75)"); ctx.globalAlpha = 1; }
+      else { const rows = 10, step = 52, shown = items.filter((x, i) => i < ci || inOut || (i === ci && !inPause && tau > pc * .6)).sort((a, b) => a.rank - b.rank).slice(0, rows);
+        shown.forEach((x, k) => { const y = 456 + k * step; ctx.globalAlpha = x === cur ? 1 : .82; font(24, 700); ctx.fillStyle = "rgba(255,255,255,.5)"; ctx.fillText(x.rank, x0, y);
+          flagBox(x.code, x0 + 46, y - 20, 36, 25, 3); const sv = short(x.value); font(24, 600); const vw = ctx.measureText(sv).width; ctx.fillStyle = accent; ctx.textAlign = "right"; ctx.fillText(sv, x0 + pw, y); ctx.textAlign = "left";
+          ctx.fillStyle = "#fff"; fit(x.name, 25, 600, pw - 100 - vw); ctx.fillText(x.name, x0 + 96, y); }); ctx.globalAlpha = 1; } }
+    if (cfg.source) { ctx.fillStyle = "rgba(148,163,184,.75)"; fit(cfg.source, 16, 500, pw + 100); ctx.fillText(cfg.source, x0, H - 26); }
+  }
+  if (inOut) quickQuestion(to, 1);
+  ctx.restore();
+}
+// ================= BUBBLE MODE: on the flat map, a bubble as big as the value grows on each country =================
+function drawBubbles(ci, tau, inOut, to) {
+  const { cfg, items } = S, n = items.length, [[mx0], [mx1]] = L.map, Rm = (mx1 - mx0) * (PORT ? .1 : .085), vmax = Math.max(...items.map(x => x.value)) || 1, list = [];
+  items.forEach((x, i) => { const cur = !inOut && i === ci; if (!(i < ci || inOut || cur)) return; if (cur && tau <= 0) return;
+    const k = cur ? back(clamp(tau / .6)) : 1; list.push({ x, cur, r: Math.max(7, Math.sqrt(Math.max(0, x.value) / vmax) * Rm) * Math.max(0, k) }); });
+  if (ci >= 0 && !inOut && tau > 0) { const m = items[ci].m; ctx.save(); ctx.globalAlpha = .8 * eout(seg(tau, 0, .3)); ctx.fillStyle = m.col; ctx.fill(m.p2, "evenodd"); ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.stroke(m.p2); ctx.restore(); }
+  list.sort((a, b) => b.r - a.r).forEach(({ x, cur, r }) => {
+    const { cx, cy, col } = x.m; ctx.save();
+    if (cur) { const ph = (tau % 1.2) / 1.2; ctx.globalAlpha = (1 - ph) * .8; ctx.strokeStyle = "#fff"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(cx, cy, r + 8 + 46 * ph, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; ctx.shadowColor = "#fff"; ctx.shadowBlur = 24; }
+    const gg = ctx.createRadialGradient(cx - r * .35, cy - r * .4, r * .1, cx, cy, r); gg.addColorStop(0, "rgba(255,255,255,.55)"); gg.addColorStop(.35, col); gg.addColorStop(1, shadeHex(col, -30));
+    ctx.globalAlpha = cur ? .92 : .78; ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.fill(); ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+    ctx.strokeStyle = cur ? "#fff" : "rgba(255,255,255,.75)"; ctx.lineWidth = cur ? 4 : 2; ctx.stroke();
+    if (r >= 24) { const fr = r * .52; ctx.save(); ctx.beginPath(); ctx.arc(cx, cy - (r > 56 ? r * .12 : 0), fr, 0, 7); ctx.clip(); flagBox(x.code, cx - fr * 1.5, cy - (r > 56 ? r * .12 : 0) - fr, fr * 3, fr * 2, 0); ctx.restore();
+      ctx.strokeStyle = "rgba(255,255,255,.9)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cx, cy - (r > 56 ? r * .12 : 0), fr, 0, 7); ctx.stroke(); }
+    if (r > 56) { font(Math.round(clamp(r * .2, 14, 30)), 900); ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineWidth = 4; ctx.strokeStyle = "rgba(5,8,18,.8)"; const sv = short(x.value); ctx.strokeText(sv, cx, cy + r * .62); ctx.fillStyle = "#fff"; ctx.fillText(sv, cx, cy + r * .62); }
+    const lab = cur || (inOut && x.rank <= 3); // outro: full name for #1 only, #2 and #3 just their rank
+    if (lab) { const s = inOut && x.rank > 1 ? "#" + x.rank : "#" + x.rank + " " + x.name; font(PORT ? 26 : 24, 900); ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineWidth = 6; ctx.strokeStyle = "rgba(5,8,18,.92)"; const ly = Math.min(cy + r + 24, L.map[1][1] + 10);
+      ctx.strokeText(s, cx, ly); ctx.fillStyle = x.rank === 1 ? "#FFD23F" : "#fff"; ctx.fillText(s, cx, ly); }
+    ctx.restore();
+  });
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+}
 function say(el, text, bad) { el.textContent = text; el.className = "msg" + (bad ? " err" : ""); }
 
 async function loadMap() {
@@ -697,7 +823,7 @@ function setup(g) {
     let main = f.geometry;
     if (main.type === "MultiPolygon") { let best = 0; f.geometry.coordinates.forEach(co => { const poly = { type: "Polygon", coordinates: co }, a = path.area(poly); if (a > best) { best = a; main = poly; } }); }
     const [cx, cy] = path.centroid(main), code = p.ISO_A2_EH && p.ISO_A2_EH !== "-99" ? p.ISO_A2_EH : p.ISO_A2;
-    const c = { code, name: p.NAME, p2: new Path2D(path(f)), cx, cy, r: Math.sqrt(path.area(main) / Math.PI), col: CONT[p.CONTINENT] || "#3A4668" };
+    const c = { code, name: p.NAME, p2: new Path2D(path(f)), cx, cy, r: Math.sqrt(path.area(main) / Math.PI), col: CONT[p.CONTINENT] || "#3A4668", f, ll: d3.geoCentroid(main) };
     if (code === "VN") { // Hoàng Sa + Trường Sa: two small dots (110m map drops them)
       c.isl = new Path2D();
       [[112.0, 16.5, 5], [114.0, 10.0, 6]].forEach(([lo, la, r]) => { const q = proj([lo, la]); if (q) { const R = Math.max(3.5, r * L.ms), d = new Path2D(); d.arc(q[0], q[1], R, 0, 7); c.p2.addPath(d); c.isl.addPath(d); } });
@@ -832,9 +958,9 @@ function extras(t) {
   }
   // fun fact: one line under the country while it is on screen
   if (live && items[ci].fact && tau > .2 && !(qz && ci === n - 1 && tau < 1.6)) {
-    const onMap = curMode() === "map", fcx = onMap && !PORT ? W * .62 : W / 2; // map layout: under the map (9:16), right of the panel (16:9)
-    const a = eout(seg(tau, .2, .5)) * (1 - seg(tau, pc - .25, pc)), fy = onMap ? (PORT ? H * .455 : H - 70) : PORT ? H * .855 : H - 92, txt = items[ci].fact;
-    ctx.globalAlpha = a; font(PORT ? 34 : 27, 700); const maxW = onMap && !PORT ? W * .6 : W - (PORT ? 90 : 220);
+    const md = curMode(), onMap = md === "map" || md === "bubble", glb = md === "globe", fcx = (onMap || glb) && !PORT ? W * (glb ? .64 : .62) : W / 2; // map layout: under the map (9:16), right of the panel (16:9)
+    const a = eout(seg(tau, .2, .5)) * (1 - seg(tau, pc - .25, pc)), fy = onMap ? (PORT ? H * .455 : H - 70) : glb ? (PORT ? H * .86 : 62) : PORT ? H * .855 : H - 92, txt = items[ci].fact;
+    ctx.globalAlpha = a; font(PORT ? 34 : 27, 700); const maxW = (onMap || glb) && !PORT ? W * .6 : W - (PORT ? 90 : 220);
     let sz = PORT ? 34 : 27; while (sz > 18 && ctx.measureText(txt).width > maxW - 80) { sz--; font(sz, 700); }
     const tw = Math.min(maxW - 80, ctx.measureText(txt).width), bw = tw + 96, bh = sz * 2.1, bx = fcx - bw / 2;
     ctx.fillStyle = "rgba(9,13,26,.9)"; ctx.strokeStyle = "rgba(56,189,248,.85)"; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.roundRect(bx, fy - bh / 2 + 10 * (1 - a), bw, bh, bh / 2); ctx.fill(); ctx.stroke();
@@ -881,7 +1007,7 @@ function overlays(t) {
   const f = S.outMode === "loop" ? 0 : seg(t, total - .5, total); if (f > 0) { ctx.globalAlpha = f; ctx.fillStyle = "#05070F"; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1; }
 }
 function draw(t) {
-  { const md = curMode(); if (md === "ball") { drawBallFrame(t); overlays(t); return; } if (md !== "map") { drawStackFrame(t, md); overlays(t); return; } }
+  { const md = curMode(); if (md === "ball") { drawBallFrame(t); overlays(t); return; } if (md === "globe") { drawGlobeFrame(t); overlays(t); return; } if (md !== "map" && md !== "bubble") { drawStackFrame(t, md); overlays(t); return; } }
   const { cfg, items, intro, per, total, accent } = S, n = items.length;
   ctx.globalAlpha = 1; ctx.shadowBlur = 0; ctx.textAlign = "left"; ctx.drawImage(base, 0, 0);
   const ci = ciAt(t), inOut = ci >= n;
@@ -906,10 +1032,13 @@ function draw(t) {
   };
   const fw = x => clamp(x.m.r * .7, 40 * L.ms, 84 * L.ms);
   // countries already counted keep their colour and a small flag
-  items.forEach((x, i) => { if (i < ci) { ctx.globalAlpha = .85; ctx.fillStyle = x.m.col; ctx.fill(x.m.p2, "evenodd"); ctx.globalAlpha = 1; } });
+  const bub = curMode() === "bubble";
+  if (bub) items.forEach((x, i) => { if (i < ci) { ctx.globalAlpha = .35; ctx.fillStyle = x.m.col; ctx.fill(x.m.p2, "evenodd"); ctx.globalAlpha = 1; } });
+  else items.forEach((x, i) => { if (i < ci) { ctx.globalAlpha = .85; ctx.fillStyle = x.m.col; ctx.fill(x.m.p2, "evenodd"); ctx.globalAlpha = 1; } });
   if (inOut) S.hl.forEach(m => glow(m, eout(seg(to, .2, .8)), ((to + 1.3) % 1.3) / 1.3));
-  items.forEach((x, i) => { if (i < ci) mapFlag(x, fw(x), 1, x.m.r > 45); });
-  if (ci >= 0 && !inOut) {
+  if (bub) drawBubbles(ci, tau, inOut, to);
+  else items.forEach((x, i) => { if (i < ci) mapFlag(x, fw(x), 1, x.m.r > 45); });
+  if (!bub && ci >= 0 && !inOut) {
     const x = items[ci], p = eout(seg(tau, 0, .4)); glow(x.m, p, (tau % 1.3) / 1.3);
     const pop = 1 + .25 * Math.sin(Math.PI * seg(tau, 0, .5)) * (1 - seg(tau, .5, .6));
     mapFlag(x, clamp(x.m.r * 1.05, 76 * L.ms, 132 * L.ms) * pop, p, true);
@@ -919,7 +1048,7 @@ function draw(t) {
     if (lit) { ctx.save(); ctx.fillStyle = vn.col; ctx.fill(vn.isl); ctx.shadowColor = "#fff"; ctx.shadowBlur = 14; ctx.strokeStyle = "#fff"; ctx.lineWidth = 2.5; ctx.stroke(vn.isl); ctx.restore(); } } }
   // header, source
   ctx.globalAlpha = 1; const hd = L.head, sr = L.src, q = L.p;
-  ctx.textAlign = hd.align; ctx.fillStyle = "#fff"; fit(cfg.title || "", hd.ts, 800, hd.w); ctx.fillText(cfg.title || "", hd.x, hd.ty);
+  if (!(bub && ci < 0 && cfg.hook !== false)) { ctx.textAlign = hd.align; ctx.fillStyle = "#fff"; fit(cfg.title || "", hd.ts, 800, hd.w); ctx.fillText(cfg.title || "", hd.x, hd.ty); } // bubble intro: the hook headline takes the top
   ctx.fillStyle = "rgba(255,255,255,.62)"; fit(cfg.subtitle || "", hd.ss, 500, hd.w); ctx.fillText(cfg.subtitle || "", hd.x, hd.sy);
   ctx.fillStyle = "rgba(255,255,255,.45)"; ctx.textAlign = sr.align; fit(cfg.source || "", sr.s, 400, sr.w); ctx.fillText(cfg.source || "", sr.x, sr.y); ctx.textAlign = "left";
   // panel
@@ -1079,6 +1208,10 @@ async function renderTrack() {
   if (S.quiz) { const i = S.items.length - 1, t0 = S.intro + S.st[i], p = S.pause[i];
     for (let k = 0; t0 + .35 + k * .5 < t0 + p - .15; k++) { const tk = t0 + .35 + k * .5, o = oc.createOscillator(), e = oc.createGain(); o.type = "square"; o.frequency.value = k % 2 ? 1500 : 1900;
       e.gain.setValueAtTime(.05, tk); e.gain.exponentialRampToValueAtTime(.0001, tk + .05); o.connect(e).connect(out); o.start(tk); o.stop(tk + .06); } }
+  if (curMode() === "globe") { const nb = oc.createBuffer(1, Math.ceil(.8 * oc.sampleRate), oc.sampleRate), d = nb.getChannelData(0); let z = 12345; for (let i = 0; i < d.length; i++) { z = (z * 1103515245 + 12345) % 2147483648; d[i] = z / 1073741824 - 1; }
+    S.items.forEach((x, i) => { const t0 = S.intro + S.st[i] + S.pause[i], b = oc.createBufferSource(), f = oc.createBiquadFilter(), e = oc.createGain(); b.buffer = nb; f.type = "bandpass"; f.Q.value = 1.4;
+      f.frequency.setValueAtTime(350, t0); f.frequency.exponentialRampToValueAtTime(2600, t0 + .55); e.gain.setValueAtTime(.0001, t0); e.gain.exponentialRampToValueAtTime(.16, t0 + .22); e.gain.exponentialRampToValueAtTime(.0001, t0 + .75);
+      b.connect(f).connect(e).connect(out); b.start(t0); b.stop(t0 + .8); }); }
   if (S.spotT) { const ts = S.intro + S.itemsT + .3; chime(oc, out, ts, 7); chime(oc, out, ts + .12, 14); }
   if (S.cfg.outro || S.outMode === "quick") chime(oc, out, S.intro + S.itemsT + .3 + S.spotT, 12);
   if (S.end) { [2.0, 3.2].forEach(x => { const o = oc.createOscillator(), g = oc.createGain(), t0 = S.e0 + x / S.ek; o.type = "square"; o.frequency.setValueAtTime(2600, t0); o.frequency.exponentialRampToValueAtTime(700, t0 + .05);

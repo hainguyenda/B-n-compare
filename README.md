@@ -6,6 +6,21 @@ App dựng video xếp hạng các nước (bản đồ sáng lên, cột 3D, co
 - `src/ball.js`: chế độ countryball
 - `vercel.json`: Vercel phục vụ thư mục `src/`, không cần build
 
+## Kiểu hình
+
+`"mode"` trong code, hoặc ô **Kiểu hình** trong app:
+
+| mode | Hình ảnh |
+| --- | --- |
+| `map` | Bản đồ phẳng, nước lần lượt sáng lên |
+| `stack` | Cột 3D to dần |
+| `split` | Cột 3D kèm bản đồ nhỏ |
+| `ball` | Countryball nhí nhảnh |
+| `globe` | Quả địa cầu xoay tới từng nước, cột sáng cao theo giá trị, tiếng vút mỗi lần xoay |
+| `bubble` | Bản đồ phẳng, bong bóng to theo giá trị mọc lên trên từng nước |
+
+Ví dụ đầy đủ: `examples/qua-dia-cau-ca-phe.json`.
+
 ## Tính năng giữ chân người xem
 
 | Trường | Tác dụng |
