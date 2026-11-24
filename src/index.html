@@ -97,13 +97,13 @@
       <tr><td>stack</td><td>Chất liệu cột: "people" (đám đông) · "money" (tiền) · "gold" (vàng) · "oil" (thùng dầu) · "crops" (nông sản) · "cubes" (khối màu). Bỏ trống thì app tự đoán theo tiêu đề.</td></tr>
       <tr><td>scale</td><td>"linear" (mặc định) · "hybrid" khi nước đầu quá vượt trội · "volume" lấy căn bậc 3.</td></tr>
       <tr><td>secondsPerCountry</td><td>Số giây dành cho mỗi nước (mặc định 2.4).</td></tr>
-      <tr><td>quiz</td><td><b>Câu đố trước #1</b>: true để app tự lấy #1 cùng #2, #3 làm 3 đáp án A/B/C, hoặc tự ghi danh sách, ví dụ ["Russia", "Canada", "CN"] (phải có nước #1). Đoạn dừng trước #1 kéo dài ~3 giây, có thanh đếm ngược và tiếng tích tắc, lộ #1 thì đáp án đúng chuyển xanh. Đổi chữ bằng <b>quizTitle</b> (mặc định "WHO IS #1?") và <b>quizCta</b> (mặc định "Comment A, B or C").</td></tr>
+      <tr><td>quiz</td><td><b>Câu đố mở đầu</b>: true để app tự lấy #1 cùng #2, #3 làm 3 đáp án A/B/C, hoặc tự ghi danh sách, ví dụ ["Russia", "Canada", "CN"] (phải có nước #1). Câu đố hiện ngay từ giây đầu thay cho câu mở đầu (hook), có thanh đếm ngược và tiếng tích tắc; tới lúc lộ #1 hiện "✓ ANSWER B: ...". Đổi chữ bằng <b>quizTitle</b> (mặc định "WHO IS #1?") và <b>quizCta</b> (mặc định "Comment A, B or C"). Câu hỏi cuối video (question) chỉ hiện khi bạn tự ghi.</td></tr>
       <tr><td>fact</td><td><b>Thông tin thú vị</b>: thêm <code>fact</code> vào từng nước trong countries, ví dụ { code: "CA", value: 9984670, fact: "Has 20% of the world's fresh water" }. Hiện một dòng ở dưới khi nước đó lên hình. Nên ngắn, dưới ~60 ký tự.</td></tr>
       <tr><td>spotlight</td><td><b>Nước được làm nổi bật</b>: "VN", hoặc { code: "VN", rank: 23, value: 1234567, say: "..." }. Nếu nước đó có trong danh sách: hiện băng rôn đỏ "VIETNAM IS #7!" khi tới lượt. Nếu không có: sau danh sách hiện thẻ "AND VIETNAM? #23" (cần ghi rank, value thì tuỳ) trước câu hỏi cuối. <b>say</b> để thay câu chữ.</td></tr>
       <tr><td>color</td><td>Màu của nước được tô sáng, ví dụ "#F5A524".</td></tr>
       <tr><td>outro</td><td>Cảnh kết: <b>big</b> (chữ to), <b>text</b>, <b>cta</b> (câu hỏi cuối) và <b>highlight</b> (các nước sáng lên lúc kết).</td></tr>
       <tr><td>source</td><td>Dòng ghi nguồn số liệu ở góc dưới.</td></tr>
-      <tr><td>endCard</td><td>Cảnh cuối kêu gọi Like &amp; Subscribe: <b>channel</b> (tên kênh), <b>handle</b> (@kênh), <b>text</b> (câu nhắn), <b>seconds</b> (số giây, mặc định 8). Bỏ dòng này nếu không muốn có cảnh cuối.</td></tr>
+      <tr><td>endCard</td><td>Cảnh cuối kêu gọi Like, Share &amp; Subscribe, <b>mặc định luôn bật</b> (tên kênh mặc định "World Compared"); ghi <b>endCard: false</b> để tắt. Tuỳ chỉnh: <b>channel</b> (tên kênh), <b>handle</b> (@kênh), <b>text</b> (câu nhắn), <b>seconds</b> (số giây, mặc định 8). Bỏ dòng này nếu không muốn có cảnh cuối.</td></tr>
       <tr><td>Khung hình</td><td>Chọn 16:9 (YouTube) hoặc 9:16 (YouTube Shorts, TikTok) cạnh nút Chạy xem thử. Video dọc nên ngắn: khoảng 10 nước, mỗi nước 2–3 giây.</td></tr>
       <tr><td>Nhạc nền</td><td>Chọn ngay dưới khung xem trước, không cần viết trong code. Nhạc được ghi luôn vào video khi xuất.</td></tr>
     </table>
@@ -163,7 +163,7 @@ const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
 const seg = (t, a, b) => clamp((t - a) / (b - a));
 const eout = x => 1 - Math.pow(1 - x, 3);
 const back = x => { const c = 1.7; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
-const ICON = { like: new Path2D("M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"), bell: new Path2D("M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"), cursor: new Path2D("M0 0L0 34L9 25L15 39L21 36L15 23L27 23Z") };
+const ICON = { like: new Path2D("M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"), bell: new Path2D("M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"), cursor: new Path2D("M0 0L0 34L9 25L15 39L21 36L15 23L27 23Z"), share: new Path2D("M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z") };
 let C = [], BY = {}, BYN = {}, GJ = null; const flags = {};
 const CONT = { "Asia":"#F5A524", "Africa":"#2DD4BF", "Europe":"#8B9BFF", "North America":"#F472B6", "South America":"#A3E635", "Oceania":"#38BDF8" };
 let AC = null, track = null, src = null, startAt = 0, userBuf = null, renderId = 0;
@@ -591,7 +591,7 @@ function drawHook(t) { // 0-intro: the top 3 towers, #1 hidden as "???" - visibl
       ctx.restore();
     }
     ctx.save(); if (my) { ctx.shadowColor = "#FFD23F"; ctx.shadowBlur = 36 + 14 * Math.sin(t * 7); }
-    drawTower({ cx: cxm, w: wv, h, floor: baseY }, it, { kind, cfg, cur: my, grow: 1, val: it.value, t, label: my ? "#1  ???" : "#" + it.rank + " " + it.name, card: true, badge: null, shift: 0, mystery: my });
+    drawTower({ cx: cxm, w: wv, h, floor: baseY }, it, { kind, cfg, cur: my, grow: 1, val: it.value, t, label: my || S.quiz ? "#" + it.rank + "  ???" : "#" + it.rank + " " + it.name, card: true, badge: null, shift: 0, mystery: my || !!S.quiz }); // opening quiz: no names on any of the top 3
     ctx.restore();
   });
   ctx.restore();
@@ -660,7 +660,7 @@ function drawStackFrame(t, mode) {
   // mini map
   if (mode === "split" && ci >= 0) { const pw = PRT ? W * .34 : Math.min(340, W * .19); drawPip(W - pw - 30, 34, pw, ci, to, 1 - seg(to, 0, .6)); }
   // outro card
-  if (inOut && quick && S.outMode === "quick" && to > TL + S.spotT) {
+  if (inOut && quick && S.outMode === "quick" && to > TL + S.spotT && askQ()) {
     const q = String(cfg.question || (cfg.outro && cfg.outro.cta && cfg.outro.cta.length < 60 ? cfg.outro.cta : "Did you guess #1? Tell us below"));
     const a = eout(seg(to, TL + S.spotT, TL + S.spotT + .3)), qy = PRT ? H * .92 : H * .93;
     ctx.save(); ctx.globalAlpha = a; ctx.textAlign = "center"; ctx.textBaseline = "middle"; fit(q, PRT ? 46 : 44, 900, W - 120);
@@ -695,7 +695,7 @@ function globeCam(t) { // centre of view [lon, lat] and zoom
   return { c: d3.geoInterpolate(from, ll(ci))(k), z: zb + (1.06 - zb) * e - hop };
 }
 function quickQuestion(to, TL) { // closing question pill (quick outro), shared by globe and bubble modes
-  const { cfg } = S; if (S.outMode !== "quick" || to <= TL + S.spotT) return;
+  const { cfg } = S; if (S.outMode !== "quick" || to <= TL + S.spotT || !askQ()) return;
   const q = String(cfg.question || (cfg.outro && cfg.outro.cta && cfg.outro.cta.length < 60 ? cfg.outro.cta : "Did you guess #1? Tell us below"));
   const a = eout(seg(to, TL + S.spotT, TL + S.spotT + .3)), qy = PORT ? H * .92 : H * .93;
   ctx.save(); ctx.globalAlpha = a; ctx.textAlign = "center"; ctx.textBaseline = "middle"; fit(q, PORT ? 46 : 44, 900, W - 120);
@@ -852,18 +852,19 @@ function build(cfg) {
   const order = cfg.order || "countdown";
   if (order === "countdown") items = sorted.slice().reverse(); else if (order === "top") items = sorted;
   if (/^(gen|fast|off)$/.test(cfg.music || "") && $("music").value !== "file") $("music").value = cfg.music;
-  const intro = cfg.introSeconds ?? 3, per = cfg.secondsPerCountry ?? 2.4;
+  const quiz = order === "countdown" && items.length >= 3 ? quizOf(cfg, sorted) : null; // asked in the intro, answered when #1 shows up
+  const intro = quiz ? Math.max(cfg.introSeconds ?? 3, 4.2) : (cfg.introSeconds ?? 3), per = cfg.secondsPerCountry ?? 2.4;
   const outMode = /^(quick|loop|full)$/.test(cfg.outroMode || "") ? cfg.outroMode : (PORT || !cfg.outro ? "quick" : "full");
   const out = outMode === "loop" ? 1.2 : outMode === "quick" ? (cfg.outroSeconds ?? 2.6) : (cfg.outro ? (cfg.outroSeconds ?? 5.5) : 1.5);
-  const quiz = order === "countdown" && items.length >= 3 ? quizOf(cfg, sorted) : null;
-  const sus = quiz ? Math.max(+cfg.suspense || 0, PORT ? 2.8 : 3.2) : (curMode() !== "map" || curMode(cfg) === "ball") && order === "countdown" && items.length >= 3 ? (cfg.suspense ?? (PORT ? .9 : 1.1)) : 0;
+  const sus = (curMode() !== "map" || curMode(cfg) === "ball") && order === "countdown" && items.length >= 3 ? (cfg.suspense ?? (PORT ? .9 : 1.1)) : 0;
   const spot = spotOf(cfg, items), spotT = spot && !spot.item ? 2.8 : 0;
   const mult = r => cfg.pace === "even" ? 1 : items.length <= 12 ? (r > 3 ? .75 : r > 1 ? 1.05 : 1.1) : (r > 20 ? .7 : r > 10 ? .85 : r > 3 ? 1 : r > 1 ? 1.15 : 1.25);
   const dur = items.map((x, i) => per * mult(x.rank) + (i === items.length - 1 ? sus : 0)), pause = items.map((x, i) => i === items.length - 1 ? sus : 0);
   const st = []; let acc = 0; dur.forEach(d => { st.push(acc); acc += d; }); const itemsT = acc;
   items.forEach(x => loadFlag(x.code));
-  const end = cfg.endCard && outMode !== "loop" ? (cfg.endCard.seconds ?? (outMode === "quick" ? 3.5 : 8)) : 0, ek = Math.max(1, 5 / (end || 5)), out2 = out + spotT;
-  S = { cfg, items, order, intro, per, out: out2, end, ek, outMode, dur, pause, st, itemsT, quiz, spot, spotT, e0: intro + itemsT + out2, total: intro + itemsT + out2 + end, accent: cfg.color || "#F5A524", bad,
+  const endCard = cfg.endCard === false ? null : Object.assign({ channel: "World Compared", text: quiz ? "Like & share if you guessed #1 right!" : "Like & share if you learned something new!" }, cfg.endCard || {}); // Like / Share / Subscribe close, on unless endCard: false
+  const end = endCard && outMode !== "loop" ? (endCard.seconds ?? (outMode === "quick" ? 3.5 : 8)) : 0, ek = Math.max(1, 5 / (end || 5)), out2 = out + spotT;
+  S = { cfg, items, order, intro, per, out: out2, end, ek, outMode, dur, pause, st, itemsT, quiz, spot, spotT, e0: intro + itemsT + out2, total: intro + itemsT + out2 + end, accent: cfg.color || "#F5A524", bad, endCard,
         hl: ((cfg.outro && cfg.outro.highlight) || []).map(k => BY[String(k).toUpperCase()]).filter(Boolean) };
   base = document.createElement("canvas"); base.width = W; base.height = H;
   const b = base.getContext("2d"); bg(b);
@@ -900,6 +901,7 @@ function drawFlag(code, x, y, w) { // x,y = left, vertical centre
 }
 
 // ---------- quiz before #1, one fun fact per country, spotlight country ----------
+function askQ() { return !!S.cfg.question || !S.end; } // closing question: when set, or when no Like/Share card follows
 function quizOf(cfg, sorted) { // cfg.quiz: true (auto: #1 + two runners-up) or a list of names / codes that includes #1
   if (!cfg.quiz) return null;
   const one = sorted[0], find = v => { const k = String(v).trim(), u = k.toUpperCase(), l = k.toLowerCase(); return sorted.find(x => x.code === u || String(x.name).toLowerCase() === l); };
@@ -926,10 +928,10 @@ function extras(t) {
   const { cfg, items, intro } = S, n = items.length, ci = ciAt(t), live = ci >= 0 && ci < n, inOut = ci >= n;
   const tau0 = live ? t - intro - S.st[ci] : 0, ps = live ? S.pause[ci] : 0, tau = tau0 - ps, pc = live ? S.dur[ci] - ps : 0, to = inOut ? t - (intro + S.itemsT) : 0;
   ctx.save(); ctx.shadowBlur = 0; ctx.textBaseline = "middle"; ctx.lineJoin = "round";
-  // quiz: answers on screen during the pause before #1, then the right one turns green
+  // quiz: asked in the intro (A/B/C, timer, ticks), answered with a chip when #1 is revealed
   const qz = S.quiz;
-  if (qz && live && ci === n - 1 && ps > 0 && tau < 1.6) {
-    const a = tau < 0 ? eout(seg(tau0, .05, .35)) : 1 - seg(tau, 1.1, 1.6), shown = tau >= 0, k = qz.opts.length;
+  if (qz && t < intro) {
+    const a = eout(seg(t, .05, .35)) * (1 - seg(t, intro - .35, intro)), k = qz.opts.length;
     const cw = PORT ? W - 140 : Math.min(980, W * .56), rh = PORT ? 118 : 86, gap = PORT ? 22 : 16, th = PORT ? 120 : 92, ch = th + k * (rh + gap) + (PORT ? 140 : 112);
     const x0 = (W - cw) / 2, y0 = (PORT ? H * .44 : H * .52) - ch / 2;
     ctx.globalAlpha = a * .55; ctx.fillStyle = "#03050c"; ctx.fillRect(0, 0, W, H);
@@ -937,27 +939,30 @@ function extras(t) {
     ctx.fillStyle = "rgba(9,13,26,.96)"; ctx.strokeStyle = "#FFD23F"; ctx.lineWidth = 4; ctx.beginPath(); ctx.roundRect(x0, y0, cw, ch, 30); ctx.fill(); ctx.stroke();
     ctx.textAlign = "center"; ctx.fillStyle = "#FFD23F"; fit(qz.title, PORT ? 70 : 54, 900, cw - 60); ctx.fillText(qz.title, W / 2, y0 + th * .55);
     qz.opts.forEach((o, i) => {
-      const y = y0 + th + i * (rh + gap), ok = shown && i === qz.answer, off = shown && !ok, pop = ok ? 1 + .05 * Math.sin(Math.PI * seg(tau, 0, .35)) : 1;
-      ctx.save(); ctx.globalAlpha = a * (off ? .35 : 1); ctx.translate(W / 2, y + rh / 2); ctx.scale(pop, pop); ctx.translate(-W / 2, -(y + rh / 2));
-      ctx.fillStyle = ok ? "#16a34a" : "rgba(255,255,255,.08)"; ctx.strokeStyle = ok ? "#bbf7d0" : "rgba(255,255,255,.28)"; ctx.lineWidth = ok ? 4 : 2;
+      const y = y0 + th + i * (rh + gap), ai = eout(seg(t, .3 + i * .18, .6 + i * .18));
+      ctx.save(); ctx.globalAlpha = a * ai; ctx.translate(40 * (1 - ai), 0);
+      ctx.fillStyle = "rgba(255,255,255,.08)"; ctx.strokeStyle = "rgba(255,255,255,.28)"; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.roundRect(x0 + 30, y, cw - 60, rh, rh / 2); ctx.fill(); ctx.stroke();
-      const L1 = String.fromCharCode(65 + i), bx = x0 + 30 + rh / 2; ctx.fillStyle = ok ? "#fff" : "#FFD23F"; ctx.beginPath(); ctx.arc(bx, y + rh / 2, rh * .36, 0, 7); ctx.fill();
-      ctx.fillStyle = ok ? "#16a34a" : "#0b1020"; font(rh * .42, 900); ctx.textAlign = "center"; ctx.fillText(L1, bx, y + rh / 2 + 1);
+      const bx = x0 + 30 + rh / 2; ctx.fillStyle = "#FFD23F"; ctx.beginPath(); ctx.arc(bx, y + rh / 2, rh * .36, 0, 7); ctx.fill();
+      ctx.fillStyle = "#0b1020"; font(rh * .42, 900); ctx.textAlign = "center"; ctx.fillText(String.fromCharCode(65 + i), bx, y + rh / 2 + 1);
       let tx = bx + rh * .62; if (o.code) { const fw = rh * .62; flagBox(o.code, tx, y + rh / 2 - fw * .35, fw, fw * .7, 4); tx += fw + 18; }
-      ctx.textAlign = "left"; ctx.fillStyle = "#fff"; fit(o.name, rh * .4, 800, x0 + cw - 50 - tx - (ok ? rh : 0)); ctx.fillText(o.name, tx, y + rh / 2 + 1);
-      if (ok) { ctx.textAlign = "right"; font(rh * .45, 900); ctx.fillText("✓", x0 + cw - 60, y + rh / 2 + 2); }
+      ctx.textAlign = "left"; ctx.fillStyle = "#fff"; fit(o.name, rh * .4, 800, x0 + cw - 50 - tx); ctx.fillText(o.name, tx, y + rh / 2 + 1);
       ctx.restore();
     });
-    const fy = y0 + th + k * (rh + gap) + (PORT ? 52 : 40);
-    if (!shown) { // timer bar drains as the reveal gets closer
-      const bw = cw - 120, f = 1 - clamp(tau0 / ps); ctx.fillStyle = "rgba(255,255,255,.14)"; ctx.beginPath(); ctx.roundRect(W / 2 - bw / 2, fy - 8, bw, 16, 8); ctx.fill();
-      ctx.fillStyle = f > .3 ? "#FFD23F" : "#ef4444"; ctx.beginPath(); ctx.roundRect(W / 2 - bw / 2, fy - 8, Math.max(16, bw * f), 16, 8); ctx.fill();
-      ctx.textAlign = "center"; ctx.fillStyle = "rgba(255,255,255,.85)"; fit(qz.cta, PORT ? 38 : 30, 800, cw - 60); ctx.fillText(qz.cta, W / 2, fy + (PORT ? 50 : 40));
-    } else { ctx.textAlign = "center"; ctx.fillStyle = "#bbf7d0"; fit("Did you get it right?", PORT ? 40 : 32, 800, cw - 60); ctx.fillText("Did you get it right?", W / 2, fy + (PORT ? 22 : 18)); }
+    const fy = y0 + th + k * (rh + gap) + (PORT ? 52 : 40), bw = cw - 120, f = 1 - clamp((t - .4) / Math.max(.5, intro - .8));
+    ctx.fillStyle = "rgba(255,255,255,.14)"; ctx.beginPath(); ctx.roundRect(W / 2 - bw / 2, fy - 8, bw, 16, 8); ctx.fill();
+    ctx.fillStyle = f > .3 ? "#FFD23F" : "#ef4444"; ctx.beginPath(); ctx.roundRect(W / 2 - bw / 2, fy - 8, Math.max(16, bw * f), 16, 8); ctx.fill();
+    ctx.textAlign = "center"; ctx.fillStyle = "rgba(255,255,255,.85)"; fit(qz.cta, PORT ? 38 : 30, 800, cw - 60); ctx.fillText(qz.cta, W / 2, fy + (PORT ? 50 : 40));
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1;
+  }
+  if (qz && live && items[ci].rank === 1 && tau > .1 && tau < 2.4) { // the answer to the opening quiz
+    const a = eout(seg(tau, .1, .4)) * (1 - seg(tau, 2, 2.4)), o = qz.opts[qz.answer], y = (PORT ? 330 : 210) + (S.spot && S.spot.item === items[ci] ? (PORT ? 110 : 90) : 0);
+    const sc = 1 + .1 * Math.sin(Math.PI * seg(tau, .1, .45)); ctx.globalAlpha = a; ctx.translate(W / 2, y); ctx.scale(sc, sc); ctx.translate(-W / 2, -y);
+    ctx.shadowColor = "#22c55e"; ctx.shadowBlur = 26; chip("✓ ANSWER " + String.fromCharCode(65 + qz.answer) + ": " + o.name.toUpperCase(), W / 2, y, PORT ? 46 : 38, "#16a34a", "#bbf7d0", "#fff"); ctx.shadowBlur = 0;
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1;
   }
   // fun fact: one line under the country while it is on screen
-  if (live && items[ci].fact && tau > .2 && !(qz && ci === n - 1 && tau < 1.6)) {
+  if (live && items[ci].fact && tau > .2) {
     const md = curMode(), onMap = md === "map" || md === "bubble", glb = md === "globe", fcx = (onMap || glb) && !PORT ? W * (glb ? .64 : .62) : W / 2; // map layout: under the map (9:16), right of the panel (16:9)
     const a = eout(seg(tau, .2, .5)) * (1 - seg(tau, pc - .25, pc)), fy = onMap ? (PORT ? H * .455 : H - 70) : glb ? (PORT ? H * .86 : 62) : PORT ? H * .855 : H - 92, txt = items[ci].fact;
     ctx.globalAlpha = a; font(PORT ? 34 : 27, 700); const maxW = (onMap || glb) && !PORT ? W * .6 : W - (PORT ? 90 : 220);
@@ -994,8 +999,9 @@ function extras(t) {
 function overlays(t) {
   const { cfg, intro, total } = S;
   extras(t);
-  // intro card
-  if (t < intro && curMode() !== "map" && cfg.hook !== false) {
+  // intro card (the quiz takes its place when there is one)
+  if (t < intro && S.quiz) {
+  } else if (t < intro && curMode() !== "map" && cfg.hook !== false) {
     drawHookText(t);
   } else if (t < intro) {
     ctx.globalAlpha = 1 - seg(t, intro - .6, intro); bg(ctx); ctx.textAlign = "center";
@@ -1095,7 +1101,7 @@ const lerp = (a, b, k) => a + (b - a) * k;
 function pill(x, y, w, h, fill) { ctx.beginPath(); ctx.roundRect(x, y, w, h, h / 2); ctx.fillStyle = fill; ctx.fill(); }
 function icon(p, x, y, sc, rot) { ctx.save(); ctx.translate(x, y); if (rot) ctx.rotate(rot); ctx.scale(sc, sc); ctx.translate(-12, -12); ctx.fill(p); ctx.restore(); }
 function drawEnd(te) {
-  const e = S.cfg.endCard, a = eout(seg(te, 0, .5)), cx = 960;
+  const e = S.endCard || {}, a = eout(seg(te, 0, .5)), cx = 960;
   ctx.save();
   ctx.globalAlpha = a * .84; ctx.fillStyle = "#05070F"; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = a;
   if (PORT) ctx.translate(W / 2 - 960, H / 2 - 540);
@@ -1110,32 +1116,33 @@ function drawEnd(te) {
   const tn = eout(seg(te, .4, .9)); ctx.globalAlpha = a * tn; ctx.textAlign = "center";
   ctx.fillStyle = "#fff"; fit(e.channel || "", 64, 800, Math.min(1200, W - 100)); ctx.fillText(e.channel || "", cx, 520 + 20 * (1 - tn));
   font(32, 500); ctx.fillStyle = "rgba(255,255,255,.62)"; ctx.fillText(e.handle || "", cx, 568 + 20 * (1 - tn));
-  // buttons
-  const tb = eout(seg(te, .6, 1.1)), by = 630 + 30 * (1 - tb), liked = te >= 2.0, subbed = te >= 3.2;
+  // buttons: Like (clicked at 2.0s), Share (2.6s), Subscribe (3.2s); laid out to fit the 9:16 crop too
+  const tb = eout(seg(te, .6, 1.1)), by = 630 + 30 * (1 - tb), liked = te >= 2.0, shared = te >= 2.6, subbed = te >= 3.2;
   ctx.globalAlpha = a * tb;
-  const lp = liked ? 1 + .12 * Math.sin(Math.PI * seg(te, 2.0, 2.3)) : 1, sp = subbed ? 1 + .1 * Math.sin(Math.PI * seg(te, 3.2, 3.5)) : 1;
-  ctx.save(); ctx.translate(750, by + 48); ctx.scale(lp, lp); ctx.translate(-750, -by - 48);
-  pill(600, by, 300, 96, liked ? "#3EA6FF" : "rgba(255,255,255,.14)");
-  ctx.fillStyle = liked ? "#0B1020" : "#fff"; icon(ICON.like, 668, by + 47, 2.3 * (liked ? 1 + .3 * Math.sin(Math.PI * seg(te, 2.0, 2.35)) : 1), liked ? -.25 * Math.sin(Math.PI * seg(te, 2.0, 2.4)) : 0);
-  font(40, 700); ctx.textAlign = "left"; ctx.fillText(liked ? "Liked" : "Like", 724, by + 62); ctx.restore();
-  ctx.save(); ctx.translate(1130, by + 48); ctx.scale(sp, sp); ctx.translate(-1130, -by - 48);
-  pill(940, by, 380, 96, subbed ? "#3A3A3A" : "#FF0033");
-  ctx.fillStyle = subbed ? "#cfcfcf" : "#fff"; font(subbed ? 36 : 40, 800); ctx.textAlign = "center"; ctx.fillText(subbed ? "SUBSCRIBED" : "SUBSCRIBE", 1130, by + 62); ctx.restore();
+  const bump = (on, t0) => on ? 1 + .12 * Math.sin(Math.PI * seg(te, t0, t0 + .3)) : 1, B = [[460, 240, 580], [724, 240, 844], [988, 372, 1174]];
+  ctx.save(); ctx.translate(B[0][2], by + 48); ctx.scale(bump(liked, 2.0), bump(liked, 2.0)); ctx.translate(-B[0][2], -by - 48);
+  pill(B[0][0], by, B[0][1], 96, liked ? "#3EA6FF" : "rgba(255,255,255,.14)");
+  ctx.fillStyle = liked ? "#0B1020" : "#fff"; icon(ICON.like, B[0][0] + 58, by + 47, 2.2 * (liked ? 1 + .3 * Math.sin(Math.PI * seg(te, 2.0, 2.35)) : 1), liked ? -.25 * Math.sin(Math.PI * seg(te, 2.0, 2.4)) : 0);
+  font(38, 700); ctx.textAlign = "left"; ctx.fillText(liked ? "Liked" : "Like", B[0][0] + 98, by + 61); ctx.restore();
+  ctx.save(); ctx.translate(B[1][2], by + 48); ctx.scale(bump(shared, 2.6), bump(shared, 2.6)); ctx.translate(-B[1][2], -by - 48);
+  pill(B[1][0], by, B[1][1], 96, shared ? "#22c55e" : "rgba(255,255,255,.14)");
+  ctx.fillStyle = shared ? "#0B1020" : "#fff"; icon(ICON.share, B[1][0] + 56, by + 47, 2.1 * (shared ? 1 + .25 * Math.sin(Math.PI * seg(te, 2.6, 2.95)) : 1));
+  font(shared ? 34 : 38, 700); ctx.textAlign = "left"; ctx.fillText(shared ? "Shared" : "Share", B[1][0] + 94, by + 61); ctx.restore();
+  ctx.save(); ctx.translate(B[2][2], by + 48); ctx.scale(bump(subbed, 3.2), bump(subbed, 3.2)); ctx.translate(-B[2][2], -by - 48);
+  pill(B[2][0], by, B[2][1], 96, subbed ? "#3A3A3A" : "#FF0033");
+  ctx.fillStyle = subbed ? "#cfcfcf" : "#fff"; font(subbed ? 34 : 38, 800); ctx.textAlign = "center"; ctx.fillText(subbed ? "SUBSCRIBED" : "SUBSCRIBE", B[2][2], by + 61); ctx.restore();
   // bell
   const tbl = back(seg(te, 3.4, 3.8));
-  if (tbl > 0) { const shake = Math.sin(te * 32) * .45 * (1 - seg(te, 3.6, 4.8)); ctx.fillStyle = "#fff"; ctx.globalAlpha = a; icon(ICON.bell, 1385, by + 48, 2.6 * tbl, shake * seg(te, 3.6, 3.7)); }
+  if (tbl > 0) { const shake = Math.sin(te * 32) * .45 * (1 - seg(te, 3.6, 4.8)); ctx.fillStyle = "#fff"; ctx.globalAlpha = a; icon(ICON.bell, 1412, by + 48, 2.4 * tbl, shake * seg(te, 3.6, 3.7)); }
   // message
   const tm = eout(seg(te, 4.2, 4.8)); ctx.globalAlpha = a * tm; ctx.textAlign = "center";
   if (e.text) { ctx.fillStyle = "rgba(255,255,255,.85)"; fit(e.text, 40, 600, Math.min(1400, W - 100)); ctx.fillText(e.text, cx, 840 + 16 * (1 - tm)); }
   // click ripples
-  [[2.0, 750], [3.2, 1130]].forEach(([tc, x]) => { const k = seg(te, tc, tc + .55); if (k > 0 && k < 1) { ctx.globalAlpha = a * (1 - k) * .8; ctx.strokeStyle = "#fff"; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(x, by + 48, 20 + 70 * k, 0, 7); ctx.stroke(); } });
-  // cursor
-  const P0 = [1560, 1010], PL = [762, 700], PS = [1142, 700], PX = [1500, 930];
-  let cp = P0;
-  if (te < 1.9) cp = [lerp(P0[0], PL[0], eout(seg(te, 1.0, 1.9))), lerp(P0[1], PL[1], eout(seg(te, 1.0, 1.9)))];
-  else if (te < 3.1) cp = [lerp(PL[0], PS[0], eout(seg(te, 2.4, 3.1))), lerp(PL[1], PS[1], eout(seg(te, 2.4, 3.1)))];
-  else cp = [lerp(PS[0], PX[0], eout(seg(te, 3.7, 4.4))), lerp(PS[1], PX[1], eout(seg(te, 3.7, 4.4)))];
-  const press = (te > 1.95 && te < 2.12) || (te > 3.15 && te < 3.32) ? .82 : 1, ca = seg(te, .9, 1.1) * (1 - seg(te, 4.5, 5));
+  [[2.0, B[0][2]], [2.6, B[1][2]], [3.2, B[2][2]]].forEach(([tc, x]) => { const k = seg(te, tc, tc + .55); if (k > 0 && k < 1) { ctx.globalAlpha = a * (1 - k) * .8; ctx.strokeStyle = "#fff"; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(x, by + 48, 20 + 70 * k, 0, 7); ctx.stroke(); } });
+  // cursor: in, Like, Share, Subscribe, out
+  const P0 = [1560, 1010], PL = [B[0][2] + 12, 700], PH = [B[1][2] + 12, 700], PS = [B[2][2] + 12, 700], PX = [1500, 930], mv = (A, Z, t0, t1) => { const k = eout(seg(te, t0, t1)); return [lerp(A[0], Z[0], k), lerp(A[1], Z[1], k)]; };
+  const cp = te < 1.95 ? mv(P0, PL, 1.0, 1.9) : te < 2.55 ? mv(PL, PH, 2.1, 2.5) : te < 3.15 ? mv(PH, PS, 2.7, 3.1) : mv(PS, PX, 3.7, 4.4);
+  const press = (te > 1.95 && te < 2.12) || (te > 2.55 && te < 2.72) || (te > 3.15 && te < 3.32) ? .82 : 1, ca = seg(te, .9, 1.1) * (1 - seg(te, 4.5, 5));
   if (ca > 0) { ctx.globalAlpha = a * ca; ctx.save(); ctx.translate(cp[0], cp[1]); ctx.scale(1.6 * press, 1.6 * press);
     ctx.shadowColor = "rgba(0,0,0,.6)"; ctx.shadowBlur = 8; ctx.fillStyle = "#fff"; ctx.fill(ICON.cursor); ctx.shadowBlur = 0; ctx.lineWidth = 1.6; ctx.strokeStyle = "#111"; ctx.stroke(ICON.cursor); ctx.restore(); }
   ctx.restore(); ctx.textAlign = "left"; ctx.globalAlpha = 1;
@@ -1205,8 +1212,8 @@ async function renderTrack() {
   S.items.forEach((x, i) => { if (x.rank === 1 && S.pause[i] > .2) { const tr = S.intro + S.st[i] + S.pause[i], bo = oc.createOscillator(), be = oc.createGain(); bo.type = "sine"; bo.frequency.setValueAtTime(95, tr); bo.frequency.exponentialRampToValueAtTime(38, tr + .5);
     be.gain.setValueAtTime(.0001, tr); be.gain.exponentialRampToValueAtTime(.55, tr + .01); be.gain.exponentialRampToValueAtTime(.0001, tr + 1.1); bo.connect(be).connect(out); bo.start(tr); bo.stop(tr + 1.2);
     [72, 76, 79, 84].forEach((m, k) => { const o = oc.createOscillator(), e = oc.createGain(), t1 = tr + k * .035; o.type = "triangle"; o.frequency.value = hz(m); e.gain.setValueAtTime(.0001, t1); e.gain.exponentialRampToValueAtTime(.09, t1 + .015); e.gain.exponentialRampToValueAtTime(.0001, t1 + 1.4); o.connect(e).connect(out); o.start(t1); o.stop(t1 + 1.5); }); } });
-  if (S.quiz) { const i = S.items.length - 1, t0 = S.intro + S.st[i], p = S.pause[i];
-    for (let k = 0; t0 + .35 + k * .5 < t0 + p - .15; k++) { const tk = t0 + .35 + k * .5, o = oc.createOscillator(), e = oc.createGain(); o.type = "square"; o.frequency.value = k % 2 ? 1500 : 1900;
+  if (S.quiz) { const t0 = 0, p = S.intro;
+    for (let k = 0; t0 + .45 + k * .5 < t0 + p - .3; k++) { const tk = t0 + .45 + k * .5, o = oc.createOscillator(), e = oc.createGain(); o.type = "square"; o.frequency.value = k % 2 ? 1500 : 1900;
       e.gain.setValueAtTime(.05, tk); e.gain.exponentialRampToValueAtTime(.0001, tk + .05); o.connect(e).connect(out); o.start(tk); o.stop(tk + .06); } }
   if (curMode() === "globe") { const nb = oc.createBuffer(1, Math.ceil(.8 * oc.sampleRate), oc.sampleRate), d = nb.getChannelData(0); let z = 12345; for (let i = 0; i < d.length; i++) { z = (z * 1103515245 + 12345) % 2147483648; d[i] = z / 1073741824 - 1; }
     S.items.forEach((x, i) => { const t0 = S.intro + S.st[i] + S.pause[i], b = oc.createBufferSource(), f = oc.createBiquadFilter(), e = oc.createGain(); b.buffer = nb; f.type = "bandpass"; f.Q.value = 1.4;
@@ -1214,7 +1221,7 @@ async function renderTrack() {
       b.connect(f).connect(e).connect(out); b.start(t0); b.stop(t0 + .8); }); }
   if (S.spotT) { const ts = S.intro + S.itemsT + .3; chime(oc, out, ts, 7); chime(oc, out, ts + .12, 14); }
   if (S.cfg.outro || S.outMode === "quick") chime(oc, out, S.intro + S.itemsT + .3 + S.spotT, 12);
-  if (S.end) { [2.0, 3.2].forEach(x => { const o = oc.createOscillator(), g = oc.createGain(), t0 = S.e0 + x / S.ek; o.type = "square"; o.frequency.setValueAtTime(2600, t0); o.frequency.exponentialRampToValueAtTime(700, t0 + .05);
+  if (S.end) { [2.0, 2.6, 3.2].forEach(x => { const o = oc.createOscillator(), g = oc.createGain(), t0 = S.e0 + x / S.ek; o.type = "square"; o.frequency.setValueAtTime(2600, t0); o.frequency.exponentialRampToValueAtTime(700, t0 + .05);
       g.gain.setValueAtTime(.12, t0); g.gain.exponentialRampToValueAtTime(.0001, t0 + .07); o.connect(g).connect(out); o.start(t0); o.stop(t0 + .1); });
     chime(oc, out, S.e0 + 3.45 / S.ek, 7); chime(oc, out, S.e0 + 3.62 / S.ek, 12); }
   const buf = await oc.startRendering();

@@ -25,7 +25,8 @@ Ví dụ đầy đủ: `examples/qua-dia-cau-ca-phe.json`.
 
 | Trường | Tác dụng |
 | --- | --- |
-| `quiz: true` hoặc `quiz: ["Russia", "IN", "United States"]` | Trước khi lộ #1, hiện câu đố A/B/C có thanh đếm ngược và tiếng tích tắc; lộ #1 thì đáp án đúng chuyển xanh. Đổi chữ bằng `quizTitle`, `quizCta`. |
+| `quiz: true` hoặc `quiz: ["Russia", "IN", "United States"]` | Mở đầu video là câu đố "WHO IS #1?" A/B/C có thanh đếm ngược và tiếng tích tắc; tới lúc lộ #1 hiện "✓ ANSWER B: ...". Đổi chữ bằng `quizTitle`, `quizCta`. |
+| `endCard` | Cảnh cuối nhờ Like, Share, Subscribe; mặc định luôn bật (kênh "World Compared"), `endCard: false` để tắt, `{ "channel", "handle", "text" }` để đổi chữ. Câu hỏi cuối (`question`) chỉ hiện khi tự ghi. |
 | `fact` trong từng nước | Một dòng thông tin thú vị hiện ở dưới khi nước đó lên hình. |
 | `spotlight: "VN"` hoặc `{ code: "VN", rank: 16, value: 101300000, say: "..." }` | Nước có trong danh sách thì hiện băng rôn đỏ "VIETNAM IS #2!". Không có thì sau danh sách hiện thẻ "AND VIETNAM? #16". |
 

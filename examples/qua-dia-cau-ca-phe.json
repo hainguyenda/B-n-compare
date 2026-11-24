@@ -3,12 +3,10 @@
   "mode": "globe",
   "unit": "60-kg bags",
   "order": "countdown",
-  "hook": "Guess the #1|coffee country?",
   "quiz": true,
   "spotlight": "VN",
   "music": "fast",
   "outroMode": "quick",
-  "question": "Did you guess #1? Tell us below",
   "source": "Data: USDA FAS, Coffee: World Markets and Trade (SỐ LIỆU MINH HOẠ – thay bằng số thật trước khi đăng)",
   "countries": [
     { "code": "BR", "value": 64700000, "fact": "Grows about 1 in 3 coffee beans on Earth" },
