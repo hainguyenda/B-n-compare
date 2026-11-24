@@ -806,81 +806,100 @@ function drawBubbles(ci, tau, inOut, to) {
   });
   ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
 }
-// ================= RACE MODE: every country runs in its own lane and stops when it runs out of its value; #1 crosses the finish =================
-function raceSetup() { // per run: lane order, finish distances, stop times
+// ================= RACE MODE: the whole track in one fixed frame; the countries run as a pack, each one tires and stops at its value; #1 crosses the finish =================
+// 9:16 runs bottom -> top (long track), 16:9 runs left -> right
+function raceSetup() {
   if (S.race) return S.race;
-  const { items, intro, cfg } = S, n = items.length, Lt = PORT ? W * 2.3 : W * 2.6, vmax = Math.max(...items.map(x => mscale(x.value, cfg))) || 1;
+  const { items, cfg } = S, n = items.length, PRT = PORT, vmax = Math.max(...items.map(x => mscale(x.value, cfg))) || 1;
+  const G = PRT ? { a0: 1640, a1: 560, c0: 24, c1: W - 96 } : { a0: 270, a1: W - 400, c0: 250, c1: 950 }, Lt = Math.abs(G.a1 - G.a0);
   const hash = s => { let h = 7; for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) % 9973; return h; };
   const order = items.map((x, i) => i).sort((a, b) => hash(items[a].code + "lane") - hash(items[b].code + "lane")), lane = [];
-  order.forEach((j, k) => lane[j] = k); // lanes are shuffled so the top lane does not give the winner away
-  const R = items.map((x, j) => ({ fin: Math.max(.015, mscale(x.value, cfg) / vmax) * Lt, T: intro + S.st[j] + S.pause[j] + .6 * (S.dur[j] - S.pause[j]), lane: lane[j], ph: (hash(x.code) % 100) / 16 }));
-  return (S.race = { Lt, R, vmax });
+  order.forEach((j, k) => lane[j] = k); // shuffled lanes: the top lane does not give the winner away
+  const stops = S.raceStops || items.map((x, j) => S.st[j] + S.dur[j] * .6);
+  let prevK = 0;
+  const R = items.map((x, j) => { const win = x.rank === 1, T = stops[j], D = win ? 0 : Math.min(.9, .8 * (T - prevK)), r = { fin: Math.max(.015, mscale(x.value, cfg) / vmax) * Lt, T, D, K: T - D / 2, lane: lane[j], ph: (hash(x.code) % 100) / 16, off: win ? 0 : ((hash(x.code + "o") % 21) - 10) / 10 * Lt * .012 }; prevK = r.K; return r; });
+  const knots = [[0, 0]].concat(R.map(r => [r.K, r.fin])).sort((a, b) => a[0] - b[0]);
+  return (S.race = { Lt, R, vmax, knots, G, lw: (G.c1 - G.c0) / n });
 }
-function raceP(r, t) { const p = clamp((t - S.intro) / Math.max(.3, r.T - S.intro)); return 1 - (1 - p) * (1 - p); } // eases into its stop
+function racePack(RC, u) { // front of the pack (distance) u seconds after GO: piecewise linear through the knots
+  const K = RC.knots; if (u <= 0) return 0;
+  for (let i = 1; i < K.length; i++) if (u <= K[i][0]) { const [t0, d0] = K[i - 1], [t1, d1] = K[i]; return d0 + (d1 - d0) * (u - t0) / Math.max(1e-6, t1 - t0); }
+  return K[K.length - 1][1];
+}
+function raceX(RC, j, u) { // runs with the pack, then tires and eases to a stop exactly at its value
+  const r = RC.R[j], own = v => Math.min(r.fin, Math.max(0, v + r.off * clamp(u / .6)));
+  if (r.D <= 0) return Math.min(r.fin, racePack(RC, u));
+  const Ta = r.T - r.D; if (u <= Ta) return own(racePack(RC, u));
+  const p0 = own(racePack(RC, Ta)), k = clamp((u - Ta) / r.D); return p0 + (r.fin - p0) * (1 - (1 - k) * (1 - k));
+}
 function niceStep(x) { const e = Math.pow(10, Math.floor(Math.log10(x))), f = x / e; return (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10) * e; }
 function drawRaceFrame(t) {
-  const { cfg, items, intro, accent } = S, n = items.length, ci = ciAt(t), live = ci >= 0 && ci < n, inOut = ci >= n, RC = raceSetup(), CE = CountryballEngine;
-  const tau0 = live ? t - intro - S.st[ci] : 0, to = inOut ? t - (intro + S.itemsT) : 0, TL = 1.2, PRT = PORT;
-  const y0 = PRT ? 470 : 250, y1 = PRT ? 1640 : 975, lh = (y1 - y0) / n, br = Math.min(lh * .36, PRT ? 62 : 46), sx0 = PRT ? 215 : 270, anchor = W * (PRT ? .55 : .58);
-  const xs = RC.R.map(r => r.fin * raceP(r, t));
-  // camera: follows the ball whose turn it is; the outro pulls back to the whole track
-  let camL = 0, k = 1;
-  if (live) { const prev = ci > 0 ? RC.R[ci - 1].fin : 0, f = lerp2(prev, xs[ci], easeIO(clamp(tau0 / .45))); camL = Math.max(0, f - (anchor - sx0)); }
-  if (inOut) { const camE = Math.max(0, RC.Lt - (anchor - sx0)), T = easeIO(clamp(to / TL)), kFit = Math.min(1, (W - sx0 - (PRT ? 330 : 420)) / RC.Lt); /* room for the "#1 name value" tag past the finish */ camL = lerp2(camE, 0, T); k = lerp2(1, kFit, T); }
-  const X = xw => sx0 + (xw - camL) * k;
+  const { cfg, items, intro } = S, n = items.length, ci = ciAt(t), live = ci >= 0 && ci < n, inOut = ci >= n, RC = raceSetup(), G = RC.G, CE = CountryballEngine, PRT = PORT;
+  const u = t - intro, to = inOut ? t - (intro + S.itemsT) : 0, lw = RC.lw, br = Math.min(lw * (PRT ? .38 : .36), PRT ? 44 : 46);
+  const P = (d, ln) => PRT ? [G.c0 + (ln + .5) * lw, G.a0 - d] : [G.a0 + d, G.c0 + (ln + .5) * lw]; // distance along the track + lane -> screen
   ctx.save(); ctx.globalAlpha = 1; ctx.shadowBlur = 0; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic"; ctx.lineJoin = "round";
-  // stadium: dark sky + stands, grass, red track
-  let g = ctx.createLinearGradient(0, 0, 0, y0); g.addColorStop(0, "#050914"); g.addColorStop(1, "#14213d"); ctx.fillStyle = g; ctx.fillRect(0, 0, W, y0);
-  for (let i = 0; i < 70; i++) { const sxp = ((i * 97.3 - camL * k * .25) % (W + 60) + W + 60) % (W + 60) - 30, syp = y0 - 70 - (i % 4) * 22; ctx.fillStyle = ["#334155", "#475569", "#1e293b"][i % 3]; ctx.beginPath(); ctx.arc(sxp, syp, 9 + (i % 3) * 2, 0, 7); ctx.fill(); } // crowd
-  g = ctx.createLinearGradient(0, y0, 0, H); g.addColorStop(0, "#1f5b33"); g.addColorStop(1, "#0d2a17"); ctx.fillStyle = g; ctx.fillRect(0, y0 - 40, W, H - y0 + 40);
-  const xa = Math.max(0, X(-60)), xb = Math.min(W, X(RC.Lt + 160));
-  ctx.fillStyle = "#b5432f"; ctx.fillRect(xa, y0 - 12, xb - xa, y1 - y0 + 24);
-  for (let i = 0; i < n; i++) { if (i % 2) { ctx.fillStyle = "rgba(0,0,0,.07)"; ctx.fillRect(xa, y0 + i * lh, xb - xa, lh); } }
-  if (live) { const ly = y0 + RC.R[ci].lane * lh; ctx.fillStyle = "rgba(255,210,63,.16)"; ctx.fillRect(xa, ly, xb - xa, lh); } // the lane in focus
-  ctx.strokeStyle = "rgba(255,255,255,.75)"; ctx.lineWidth = 3; for (let i = 0; i <= n; i++) { const y = y0 + i * lh; ctx.beginPath(); ctx.moveTo(xa, y); ctx.lineTo(xb, y); ctx.stroke(); }
+  // stadium: night sky + crowd on top, grass, red track
+  const top = PRT ? G.a1 - 40 : G.c0 - 30;
+  let g = ctx.createLinearGradient(0, 0, 0, top); g.addColorStop(0, "#050914"); g.addColorStop(1, "#14213d"); ctx.fillStyle = g; ctx.fillRect(0, 0, W, top);
+  for (let i = 0; i < 80; i++) { const sxp = (i * 97.3) % (W + 40) - 20, syp = top - 18 - (i % 4) * 20, bob = Math.sin(t * 6 + i) * (t > intro ? 3 : 0); ctx.fillStyle = ["#334155", "#475569", "#1e293b"][i % 3]; ctx.beginPath(); ctx.arc(sxp, syp + bob, 8 + (i % 3) * 2, 0, 7); ctx.fill(); }
+  g = ctx.createLinearGradient(0, top, 0, H); g.addColorStop(0, "#1f5b33"); g.addColorStop(1, "#0d2a17"); ctx.fillStyle = g; ctx.fillRect(0, top, W, H - top);
+  ctx.fillStyle = "#b5432f"; if (PRT) ctx.fillRect(G.c0 - 12, G.a1 - 26, G.c1 - G.c0 + 24, G.a0 - G.a1 + 52); else ctx.fillRect(G.a0 - 40, G.c0 - 12, G.a1 - G.a0 + 80, G.c1 - G.c0 + 24);
+  for (let i = 0; i < n; i++) if (i % 2) { ctx.fillStyle = "rgba(0,0,0,.07)"; if (PRT) ctx.fillRect(G.c0 + i * lw, G.a1 - 26, lw, G.a0 - G.a1 + 52); else ctx.fillRect(G.a0 - 40, G.c0 + i * lw, G.a1 - G.a0 + 80, lw); }
+  if (live) { const ln = RC.R[ci].lane; ctx.fillStyle = "rgba(255,210,63,.14)"; if (PRT) ctx.fillRect(G.c0 + ln * lw, G.a1 - 26, lw, G.a0 - G.a1 + 52); else ctx.fillRect(G.a0 - 40, G.c0 + ln * lw, G.a1 - G.a0 + 80, lw); }
+  ctx.strokeStyle = "rgba(255,255,255,.75)"; ctx.lineWidth = 3;
+  for (let i = 0; i <= n; i++) { const c = G.c0 + i * lw; ctx.beginPath(); if (PRT) { ctx.moveTo(c, G.a1 - 26); ctx.lineTo(c, G.a0 + 26); } else { ctx.moveTo(G.a0 - 40, c); ctx.lineTo(G.a1 + 40, c); } ctx.stroke(); }
   // distance marks in the data's own unit
-  { const vmaxV = Math.max(...items.map(x => x.value)), st = niceStep(vmaxV / (PRT ? 4 : 6)); ctx.font = "700 " + (PRT ? 22 : 18) + "px " + FONT; ctx.textAlign = "center";
-    for (let v = st; v < vmaxV * .999; v += st) { const xw = mscale(v, cfg) / RC.vmax * RC.Lt, x = X(xw); if (x < -40 || x > W + 40) continue;
-      ctx.strokeStyle = "rgba(255,255,255,.28)"; ctx.setLineDash([10, 10]); ctx.beginPath(); ctx.moveTo(x, y0 - 12); ctx.lineTo(x, y1 + 12); ctx.stroke(); ctx.setLineDash([]);
-      ctx.fillStyle = "rgba(255,255,255,.8)"; ctx.fillText(short(v), x, y0 - 22); } }
-  // start and finish lines
-  { const xs0 = X(0); ctx.fillStyle = "#fff"; ctx.fillRect(xs0 - 3, y0 - 12, 6, y1 - y0 + 24);
-    const xf = X(RC.Lt), cs = Math.max(8, lh / 6); for (let r = 0; r * cs < y1 - y0 + 24; r++) for (let c = 0; c < 3; c++) { ctx.fillStyle = (r + c) % 2 ? "#111" : "#fff"; ctx.fillRect(xf - cs * 1.5 + c * cs, y0 - 12 + r * cs, cs, cs); }
-    ctx.fillStyle = "#FFD23F"; ctx.font = "900 " + (PRT ? 26 : 22) + "px " + FONT; ctx.textAlign = "center"; ctx.fillText("FINISH", xf, y0 - 22); }
+  { const vmaxV = Math.max(...items.map(x => x.value)), stp = niceStep(vmaxV / (PRT ? 5 : 6)); ctx.font = "800 " + (PRT ? 22 : 18) + "px " + FONT;
+    for (let v = stp; v < vmaxV * .92; v += stp) { const d = mscale(v, cfg) / RC.vmax * RC.Lt; ctx.strokeStyle = "rgba(255,255,255,.3)"; ctx.setLineDash([10, 10]); ctx.beginPath();
+      if (PRT) { const y = G.a0 - d; ctx.moveTo(G.c0 - 12, y); ctx.lineTo(G.c1 + 12, y); ctx.stroke(); ctx.setLineDash([]); ctx.textAlign = "right"; ctx.lineWidth = 5; ctx.strokeStyle = "rgba(5,8,18,.8)"; ctx.strokeText(short(v), W - 8, y - 10); ctx.fillStyle = "rgba(255,255,255,.9)"; ctx.fillText(short(v), W - 8, y - 10); } /* in the grass margin, clear of the lanes */
+      else { const x = G.a0 + d; ctx.moveTo(x, G.c0 - 12); ctx.lineTo(x, G.c1 + 12); ctx.stroke(); ctx.setLineDash([]); ctx.textAlign = "center"; ctx.fillStyle = "rgba(255,255,255,.85)"; ctx.fillText(short(v), x, G.c0 - 20); } } }
+  // start line, chequered finish
+  ctx.fillStyle = "#fff"; if (PRT) ctx.fillRect(G.c0 - 12, G.a0 - 3, G.c1 - G.c0 + 24, 6); else ctx.fillRect(G.a0 - 3, G.c0 - 12, 6, G.c1 - G.c0 + 24);
+  { const cs = 13, len = (G.c1 - G.c0 + 24); for (let r = 0; r * cs < len; r++) for (let c = 0; c < 3; c++) { ctx.fillStyle = (r + c) % 2 ? "#111" : "#fff"; if (PRT) ctx.fillRect(G.c0 - 12 + r * cs, G.a1 - cs * 1.5 + c * cs, cs, cs); else ctx.fillRect(G.a1 - cs * 1.5 + c * cs, G.c0 - 12 + r * cs, cs, cs); } }
+  ctx.font = "900 " + (PRT ? 28 : 22) + "px " + FONT; ctx.textAlign = "center"; ctx.lineWidth = 6; ctx.strokeStyle = "rgba(5,8,18,.85)";
+  if (PRT) { ctx.strokeText("FINISH", W / 2, G.a1 - 40); ctx.fillStyle = "#FFD23F"; ctx.fillText("FINISH", W / 2, G.a1 - 40); } else { ctx.strokeText("FINISH", G.a1, G.c0 - 20); ctx.fillStyle = "#FFD23F"; ctx.fillText("FINISH", G.a1, G.c0 - 20); }
+  // lane names: under the start (9:16) or before it (16:9)
+  items.forEach((x, j) => { const ln = RC.R[j].lane; ctx.textBaseline = "middle"; ctx.lineWidth = 5; ctx.strokeStyle = "rgba(5,8,18,.85)"; ctx.fillStyle = "#fff";
+    if (PRT) { const cx = G.c0 + (ln + .5) * lw, fw = Math.min(46, lw * .5); flagBox(x.code, cx - fw / 2, G.a0 + 34, fw, fw * .68, 3); ctx.textAlign = "center"; fit(x.name, 19, 800, lw - 6); ctx.strokeText(x.name, cx, G.a0 + 34 + fw * .68 + 18); ctx.fillText(x.name, cx, G.a0 + 34 + fw * .68 + 18); }
+    else { const cy = G.c0 + (ln + .5) * lw; ctx.textAlign = "right"; fit(x.name, Math.round(clamp(lw * .26, 13, 20)), 800, G.a0 - 70); ctx.strokeText(x.name, G.a0 - 52, cy); ctx.fillText(x.name, G.a0 - 52, cy); flagBox(x.code, G.a0 - 46, cy - 9, 26, 18, 2); }
+    ctx.textBaseline = "alphabetic"; });
   // runners
-  const lbl = Math.round(clamp(lh * .2, 13, PRT ? 26 : 22));
   items.forEach((x, j) => {
-    const r = RC.R[j], xw = xs[j], sx = X(xw), yc = y0 + (r.lane + .5) * lh; if (sx < -br * 4 || sx > W + br * 4) return;
-    const started = t > intro, stopped = t >= r.T, running = started && !stopped, win = stopped && x.rank === 1, sinceStop = t - r.T;
-    const hop = running ? Math.abs(Math.sin(t * 15 + r.ph)) * br * .28 : 0, tilt = running ? .16 : 0;
-    if (running) { ctx.save(); ctx.strokeStyle = "rgba(255,255,255,.55)"; ctx.lineWidth = 3; ctx.lineCap = "round"; for (let s = 0; s < 3; s++) { const ly = yc - br * .3 + s * br * .45, len = br * (.7 + .3 * Math.sin(t * 9 + s + r.ph)); ctx.beginPath(); ctx.moveTo(sx - br * 1.25, ly); ctx.lineTo(sx - br * 1.25 - len, ly); ctx.stroke(); } ctx.restore(); }
-    ctx.save(); ctx.translate(sx, yc + br * .95 - hop); ctx.rotate(tilt);
-    const f = flags[x.code], emo = !started ? "determined" : running ? "determined" : win ? "proud" : sinceStop < .9 ? "shocked" : "happy";
-    CE.drawCountryball(ctx, { x: 0, groundY: 0, radius: br, flagImg: f && f.ok ? f.im : null, fallbackColor: (x.m && x.m.col) || "#475569", emotion: emo, lookDir: 1, hasCrown: win && sinceStop > .15, dropProgress: 1, time: t + r.ph });
+    const r = RC.R[j], d = raceX(RC, j, u), [sx, sy] = P(d, r.lane), started = u > 0, stopped = u >= r.T, tiring = started && !stopped && u > r.T - r.D && r.D > 0, win = x.rank === 1 && stopped, since = u - r.T;
+    const tiredK = tiring ? clamp((u - (r.T - r.D)) / r.D) : stopped && !win ? 1 : 0;
+    const hop = started && !stopped ? Math.abs(Math.sin(t * 15 + r.ph)) * br * .3 * (1 - .7 * tiredK) : 0, wob = tiredK > 0 && !win ? Math.sin(t * (stopped ? 3 : 9) + r.ph) * (stopped ? .06 : .14) : 0;
+    if (started && !stopped && !tiring) { ctx.save(); ctx.strokeStyle = "rgba(255,255,255,.55)"; ctx.lineWidth = 3; ctx.lineCap = "round"; for (let s = 0; s < 3; s++) { const o = -br * .45 + s * br * .45, len = br * (.6 + .3 * Math.sin(t * 9 + s + r.ph)); ctx.beginPath();
+      if (PRT) { ctx.moveTo(sx + o, sy + br * 1.25); ctx.lineTo(sx + o, sy + br * 1.25 + len); } else { ctx.moveTo(sx - br * 1.25, sy + o); ctx.lineTo(sx - br * 1.25 - len, sy + o); } ctx.stroke(); } ctx.restore(); }
+    const breathe = stopped && !win ? 1 + .05 * Math.sin(t * 7 + r.ph) : 1;
+    ctx.save(); ctx.translate(sx, sy + br - hop); ctx.rotate((PRT ? 0 : started && !tiredK ? .14 : 0) + wob); ctx.scale(1 / breathe, breathe);
+    const f = flags[x.code], emo = win ? "proud" : tiredK > .15 ? "tired" : "determined";
+    CE.drawCountryball(ctx, { x: 0, groundY: 0, radius: br, flagImg: f && f.ok ? f.im : null, fallbackColor: (x.m && x.m.col) || "#475569", emotion: emo, lookDir: PRT ? 0 : 1, hasCrown: win && since > .15, dropProgress: 1, time: t + r.ph });
     ctx.restore();
-    ctx.font = "800 " + lbl + "px " + FONT; ctx.textBaseline = "middle";
-    if (!stopped) { ctx.textAlign = "right"; ctx.lineWidth = 5; ctx.strokeStyle = "rgba(5,8,18,.85)"; ctx.strokeText(x.name, sx - br * 1.3, yc); ctx.fillStyle = "#fff"; ctx.fillText(x.name, sx - br * 1.3, yc); }
-    else { const pop = 1 + .25 * Math.sin(Math.PI * clamp(sinceStop / .35)), s = "#" + x.rank + "  " + x.name + "  " + short(x.value); ctx.save(); ctx.translate(sx + br * 1.25, yc); ctx.scale(pop, pop);
-      const tw = ctx.measureText(s).width, ph = lbl * 1.7; ctx.fillStyle = x.rank === 1 ? "#FFD23F" : live && j === ci ? "#f59e0b" : "rgba(9,13,26,.9)"; ctx.strokeStyle = "#fff"; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.roundRect(0, -ph / 2, tw + 24, ph, ph / 2); ctx.fill(); ctx.stroke(); ctx.fillStyle = x.rank === 1 || (live && j === ci) ? "#0b1020" : "#fff"; ctx.textAlign = "left"; ctx.fillText(s, 12, 1); ctx.restore(); }
-    ctx.textBaseline = "alphabetic";
+    if (stopped) { // rank + value tag
+      const pop = 1 + .25 * Math.sin(Math.PI * clamp(since / .35)), hl = x.rank === 1 ? "#FFD23F" : live && j === ci ? "#f59e0b" : "rgba(9,13,26,.9)", dark = x.rank === 1 || (live && j === ci);
+      ctx.save(); ctx.textBaseline = "middle";
+      if (PRT) { ctx.translate(sx, sy - br * 1.55); ctx.scale(pop, pop); font(22, 900); const s = "#" + x.rank, tw = ctx.measureText(s).width + 22; ctx.fillStyle = hl; ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.beginPath(); ctx.roundRect(-tw / 2, -17, tw, 34, 17); ctx.fill(); ctx.stroke(); ctx.fillStyle = dark ? "#0b1020" : "#fff"; ctx.textAlign = "center"; ctx.fillText(s, 0, 1);
+        ctx.setTransform(1, 0, 0, 1, 0, 0); font(19, 800); ctx.lineWidth = 5; ctx.strokeStyle = "rgba(5,8,18,.9)"; const sv = short(x.value); ctx.strokeText(sv, sx, sy + br * 1.45); ctx.fillStyle = "#fff"; ctx.fillText(sv, sx, sy + br * 1.45); }
+      else { ctx.translate(sx + br * 1.25, sy); ctx.scale(pop, pop); font(Math.round(clamp(lw * .26, 13, 20)), 800); const s = "#" + x.rank + "  " + x.name + "  " + short(x.value), tw = ctx.measureText(s).width, ph = Math.round(clamp(lw * .26, 13, 20)) * 1.7;
+        ctx.fillStyle = hl; ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.beginPath(); ctx.roundRect(0, -ph / 2, tw + 24, ph, ph / 2); ctx.fill(); ctx.stroke(); ctx.fillStyle = dark ? "#0b1020" : "#fff"; ctx.textAlign = "left"; ctx.fillText(s, 12, 1); }
+      ctx.restore(); }
   });
   // the winner crosses: flash + confetti
-  const wj = items.findIndex(x => x.rank === 1), tw0 = wj >= 0 ? t - RC.R[wj].T : -1;
+  const wj = items.findIndex(x => x.rank === 1), tw0 = wj >= 0 ? u - RC.R[wj].T : -1;
   if (tw0 >= 0 && tw0 < .45) { ctx.globalAlpha = .5 * (1 - tw0 / .45); ctx.fillStyle = "#fff8dc"; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1; }
-  if (tw0 >= 0 && tw0 < 3) { const cx = X(RC.Lt), cy = y0 + (RC.R[wj].lane + .5) * lh, pal = ["#FFD23F", "#ef4444", "#22c55e", "#3b82f6", "#ec4899", "#fff"];
-    for (let i = 0; i < 90; i++) { const a = (i * 2.399) % 6.283, sp = 260 + (i * 37) % 420, px = cx + Math.cos(a) * sp * tw0, py = cy + Math.sin(a) * sp * tw0 * .8 + 420 * tw0 * tw0, rr = 5 + (i % 4) * 2;
+  if (tw0 >= 0 && tw0 < 3) { const [cx, cy] = P(RC.Lt, RC.R[wj].lane), pal = ["#FFD23F", "#ef4444", "#22c55e", "#3b82f6", "#ec4899", "#fff"];
+    for (let i = 0; i < 100; i++) { const a = (i * 2.399) % 6.283, sp = 240 + (i * 37) % 420, px = cx + Math.cos(a) * sp * tw0, py = cy + Math.sin(a) * sp * tw0 * .8 + 420 * tw0 * tw0, rr = 5 + (i % 4) * 2;
       ctx.globalAlpha = 1 - tw0 / 3; ctx.fillStyle = pal[i % pal.length]; ctx.save(); ctx.translate(px, py); ctx.rotate(i + tw0 * 8); ctx.fillRect(-rr, -rr * .45, rr * 2, rr * .9); ctx.restore(); } ctx.globalAlpha = 1; }
   // GO!
-  if (t > intro - .05 && t < intro + .7) { const u = (t - intro + .05) / .75, sc = .6 + .6 * back(clamp(u * 2)); ctx.save(); ctx.globalAlpha = 1 - seg(u, .7, 1); ctx.translate(W / 2, (y0 + y1) / 2); ctx.scale(sc, sc);
+  if (u > -.05 && u < .7) { const k = (u + .05) / .75, sc = .6 + .6 * back(clamp(k * 2)), cy = PRT ? (G.a0 + G.a1) / 2 : (G.c0 + G.c1) / 2; ctx.save(); ctx.globalAlpha = 1 - seg(k, .7, 1); ctx.translate(W / 2, cy); ctx.scale(sc, sc);
     ctx.font = "900 " + (PRT ? 190 : 150) + "px " + FONT; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineWidth = 16; ctx.strokeStyle = "rgba(5,8,18,.9)"; ctx.strokeText("GO!", 0, 0); ctx.fillStyle = "#22c55e"; ctx.fillText("GO!", 0, 0); ctx.restore(); }
-  // header: title + the value of the ball in focus, counting up as it runs
+  // header: title + how far the front of the race has gone, in the data's unit
   ctx.textAlign = "left"; ctx.fillStyle = "#fbbf24"; fit(String(cfg.title || "").toUpperCase(), PRT ? 20 : 21, 800, W - 90); ctx.fillText(String(cfg.title || "").toUpperCase(), PRT ? 34 : 46, 36);
-  if (live || inOut) { const j = live ? ci : n - 1, v = items[j].value * raceP(RC.R[j], t), cx0 = PRT ? 34 : 46;
+  if (u > 0) { let lead = 0, v = 0; items.forEach((x, j) => { const d = raceX(RC, j, u); if (d > lead) { lead = d; v = x.value * d / RC.R[j].fin; } }); const cx0 = PRT ? 34 : 46;
     ctx.save(); ctx.shadowColor = "rgba(255,255,255,.35)"; ctx.shadowBlur = 18; ctx.fillStyle = "#fff"; fit(full(v), PRT ? 52 : 64, 900, W - 90); ctx.fillText(full(v), cx0, PRT ? 108 : 112);
-    ctx.shadowBlur = 10; ctx.fillStyle = "#e2e8f0"; const sub = items[j].name + (cfg.unit ? "  ·  " + cfg.unit : ""); fit(sub, PRT ? 28 : 30, 800, W - 90); ctx.fillText(sub, cx0 + 4, PRT ? 152 : 156); ctx.restore(); }
+    if (cfg.unit) { ctx.shadowBlur = 10; ctx.fillStyle = "#e2e8f0"; fit(cfg.unit, PRT ? 28 : 30, 800, W - 90); ctx.fillText(cfg.unit, cx0 + 4, PRT ? 152 : 156); } ctx.restore(); }
   if (cfg.source) { ctx.fillStyle = "rgba(148,163,184,.75)"; fit(cfg.source, PRT ? 17 : 15, 500, W - 60); ctx.textAlign = "left"; ctx.fillText(cfg.source, 28, H - 20); }
-  if (inOut) quickQuestion(to, 1);
+  if (inOut) quickQuestion(to, .6, PORT ? H * .947 : undefined); /* 9:16: below the lane names */
   ctx.restore();
 }
 function say(el, text, bad) { el.textContent = text; el.className = "msg" + (bad ? " err" : ""); }
@@ -939,10 +958,17 @@ function build(cfg) {
   const mult = r => cfg.pace === "even" ? 1 : items.length <= 12 ? (r > 3 ? .75 : r > 1 ? 1.05 : 1.1) : (r > 20 ? .7 : r > 10 ? .85 : r > 3 ? 1 : r > 1 ? 1.15 : 1.25);
   const dur = items.map((x, i) => per * mult(x.rank) + (i === items.length - 1 ? sus : 0)), pause = items.map((x, i) => i === items.length - 1 ? sus : 0);
   const st = []; let acc = 0; dur.forEach(d => { st.push(acc); acc += d; }); const itemsT = acc;
+  let raceStops = null;
+  if (curMode(cfg) === "race" && items.length >= 2) { // race: stops come by order and by distance (a pack that thins out), each slot starts just after the previous stop
+    const vm = Math.max(...items.map(x => mscale(x.value, cfg))) || 1, m = items.length, run0 = PORT ? .9 : 1.2, span = itemsT - run0 - .5;
+    raceStops = items.map((x, j) => run0 + span * (.5 * mscale(x.value, cfg) / vm + .5 * (j + 1) / m));
+    for (let j = 1; j < m; j++) raceStops[j] = Math.max(raceStops[j], raceStops[j - 1] + .25);
+    pause.fill(0); items.forEach((x, j) => st[j] = j ? raceStops[j - 1] + .3 : 0); st.forEach((v, j) => dur[j] = (j < m - 1 ? st[j + 1] : itemsT) - v);
+  }
   items.forEach(x => loadFlag(x.code));
   const endCard = cfg.endCard === false || (PORT && cfg.endCard == null) ? null : Object.assign({ channel: "World Compared", text: quiz ? "Like & share if you guessed #1 right!" : "Like & share if you learned something new!" }, cfg.endCard || {}); // Like / Share / Subscribe close: on for 16:9, off for Shorts (dead time that breaks the loop) unless endCard is given
   const end = endCard && outMode !== "loop" ? (endCard.seconds ?? (outMode === "quick" ? 3.5 : 8)) : 0, ek = Math.max(1, 5 / (end || 5)), out2 = out + spotT;
-  S = { cfg, items, order, intro, per, out: out2, end, ek, outMode, dur, pause, st, itemsT, quiz, spot, spotT, e0: intro + itemsT + out2, total: intro + itemsT + out2 + end, accent: cfg.color || "#F5A524", bad, endCard, noFade: PORT && !end && outMode !== "full",
+  S = { cfg, items, order, intro, per, out: out2, end, ek, outMode, dur, pause, st, itemsT, quiz, spot, spotT, e0: intro + itemsT + out2, total: intro + itemsT + out2 + end, accent: cfg.color || "#F5A524", bad, endCard, raceStops, noFade: PORT && !end && outMode !== "full",
         hl: ((cfg.outro && cfg.outro.highlight) || []).map(k => BY[String(k).toUpperCase()]).filter(Boolean) };
   base = document.createElement("canvas"); base.width = W; base.height = H;
   const b = base.getContext("2d"); bg(b);
@@ -1011,7 +1037,7 @@ function extras(t) {
   // quiz: asked in the intro (A/B/C, timer, ticks), answered with a chip when #1 is revealed
   const qz = S.quiz;
   if (qz && t < intro) { // answers as a row of chips at the bottom: the podium + headline stay fully visible
-    const a = 1 - seg(t, intro - .3, intro), k = qz.opts.length, chH = PORT ? 84 : 58, gap = PORT ? 14 : 16, y = PORT ? H * .9 : H - 50;
+    const a = 1 - seg(t, intro - .3, intro), k = qz.opts.length, chH = PORT ? 84 : 58, gap = PORT ? 14 : 16, y = PORT ? H * (curMode() === "race" ? .951 : .9) : H - 50;
     let fs = chH * .42; const wOf = o => { font(fs, 800); return chH * .95 + (o.code ? fs * 1.5 + 10 : 0) + ctx.measureText(o.name).width + chH * .45; };
     let tot = qz.opts.reduce((s2, o) => s2 + wOf(o), 0) + gap * (k - 1); if (tot > W - 40) { fs *= (W - 40) / tot; tot = qz.opts.reduce((s2, o) => s2 + wOf(o), 0) + gap * (k - 1); }
     let x = W / 2 - tot / 2; ctx.globalAlpha = a;
@@ -1024,16 +1050,19 @@ function extras(t) {
       font(fs, 800); ctx.textAlign = "left"; ctx.fillStyle = "#fff"; ctx.fillText(o.name, tx, y + 1); ctx.restore(); x += w + gap; });
     ctx.globalAlpha = 1;
   }
-  if (qz && live && items[ci].rank === 1 && tau > .1 && tau < 2.4) { // the answer to the opening quiz
-    const a = eout(seg(tau, .1, .4)) * (1 - seg(tau, 2, 2.4)), o = qz.opts[qz.answer], y = (PORT ? 330 : 210) + (S.spot && S.spot.item === items[ci] ? (PORT ? 110 : 90) : 0);
-    const sc = 1 + .1 * Math.sin(Math.PI * seg(tau, .1, .45)); ctx.globalAlpha = a; ctx.translate(W / 2, y); ctx.scale(sc, sc); ctx.translate(-W / 2, -y);
+  // when a country is "revealed": its slot start (tau), or in the race the moment it stops running (it can be past its slot)
+  const rs = S.raceStops, since = it => { const j = items.indexOf(it); return rs ? (j >= 0 ? t - intro - rs[j] : -1) : live && items[ci] === it ? tau : -1; };
+  const one = items.find(x => x.rank === 1), tq = one ? since(one) : -1;
+  if (qz && tq > .1 && tq < 2.4) { // the answer to the opening quiz
+    const a = eout(seg(tq, .1, .4)) * (1 - seg(tq, 2, 2.4)), o = qz.opts[qz.answer], y = (PORT ? 330 : 210) + (S.spot && S.spot.item === one ? (PORT ? 110 : 90) : 0);
+    const sc = 1 + .1 * Math.sin(Math.PI * seg(tq, .1, .45)); ctx.globalAlpha = a; ctx.translate(W / 2, y); ctx.scale(sc, sc); ctx.translate(-W / 2, -y);
     ctx.shadowColor = "#22c55e"; ctx.shadowBlur = 26; chip("✓ ANSWER " + String.fromCharCode(65 + qz.answer) + ": " + o.name.toUpperCase(), W / 2, y, PORT ? 46 : 38, "#16a34a", "#bbf7d0", "#fff"); ctx.shadowBlur = 0;
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1;
   }
   // fun fact: one line under the country while it is on screen
   if (live && items[ci].fact && tau > .2) {
     const md = curMode(), onMap = md === "map" || md === "bubble", glb = md === "globe", rc = md === "race", fcx = (onMap || glb || rc) && !PORT ? W * (glb ? .64 : .62) : W / 2; // map layout: under the map (9:16), right of the panel (16:9)
-    const a = eout(seg(tau, .2, .5)) * (1 - seg(tau, pc - .25, pc)), fy = onMap ? (PORT ? H * .455 : H - 70) : glb ? (PORT ? H * .86 : 62) : rc ? (PORT ? H * .89 : H - 44) : PORT ? H * .855 : H - 92, txt = items[ci].fact;
+    const a = eout(seg(tau, .2, .5)) * (1 - seg(tau, pc - .25, pc)), fy = onMap ? (PORT ? H * .455 : H - 70) : glb ? (PORT ? H * .86 : 62) : rc ? (PORT ? 470 : H - 44) : PORT ? H * .855 : H - 92, txt = items[ci].fact;
     ctx.globalAlpha = a; font(PORT ? 34 : 27, 700); const maxW = (onMap || glb || rc) && !PORT ? W * .6 : W - (PORT ? 90 : 220);
     let sz = PORT ? 34 : 27; while (sz > 18 && ctx.measureText(txt).width > maxW - 80) { sz--; font(sz, 700); }
     const tw = Math.min(maxW - 80, ctx.measureText(txt).width), bw = tw + 96, bh = sz * 2.1, bx = fcx - bw / 2;
@@ -1044,8 +1073,9 @@ function extras(t) {
   }
   // spotlight: a banner when "our" country shows up, or a card after the list when it is not in it
   const sp = S.spot;
-  if (sp && sp.item && live && items[ci] === sp.item && tau > 0) {
-    const a = eout(seg(tau, .05, .3)) * (1 - seg(tau, pc - .2, pc)), y = PORT ? 330 : 210, sc = 1 + .12 * Math.sin(Math.PI * seg(tau, .05, .4));
+  const ts = sp && sp.item ? since(sp.item) : -1, tsEnd = rs ? 1.8 : pc;
+  if (sp && sp.item && ts > 0 && ts < tsEnd) {
+    const a = eout(seg(ts, .05, .3)) * (1 - seg(ts, tsEnd - .2, tsEnd)), y = PORT ? 330 : 210, sc = 1 + .12 * Math.sin(Math.PI * seg(ts, .05, .4));
     const txt = (sp.say || sp.name + " is #" + sp.rank + "!").toUpperCase();
     ctx.globalAlpha = a; ctx.translate(W / 2, y); ctx.scale(sc, sc); ctx.translate(-W / 2, -y);
     ctx.shadowColor = "#f43f5e"; ctx.shadowBlur = 28; chip(txt, W / 2, y, PORT ? 50 : 40, "#e11d48", "#fff", "#fff"); ctx.shadowBlur = 0;
@@ -1274,6 +1304,8 @@ async function renderTrack() {
       if (p > .2) { sfx(oc, out, t0 + .25, "gasp_drop", .4); sfx(oc, out, tr + .02, "victory_chime", .3); sfx(oc, out, tr + .04, "pop", .4); }
       else if (x.rank <= 3) { sfx(oc, out, tr + .25, "gasp_drop", x.rank === 1 ? .45 : .35); if (x.rank === 1) sfx(oc, out, tr + .3, "victory_chime", .3); }
       else sfx(oc, out, tr + .25, "boing", .3); });
+  } else if (S.raceStops) { const sfx = CountryballEngine.scheduleCartoonSfxOffline;
+    S.items.forEach((x, i) => { const tr = S.intro + S.raceStops[i]; if (x.rank === 1) { sfx(oc, out, tr, "victory_chime", .35); sfx(oc, out, tr + .02, "pop", .4); } else sfx(oc, out, tr, "pop", .28); });
   } else
   S.items.forEach((x, i) => chime(oc, out, S.intro + S.st[i] + S.pause[i] + .02, pent[Math.round(i * (pent.length - 1) / Math.max(1, S.items.length - 1))] ?? 0));
   S.items.forEach((x, i) => { const p = S.pause[i]; if (p > .2) { const t0 = S.intro + S.st[i], o = oc.createOscillator(), e = oc.createGain(); o.type = "sawtooth"; o.frequency.setValueAtTime(180, t0); o.frequency.exponentialRampToValueAtTime(1500, t0 + p);
@@ -1284,7 +1316,7 @@ async function renderTrack() {
   if (S.quiz) { const t0 = 0, p = S.intro;
     for (let k = 0; t0 + .45 + k * .5 < t0 + p - .3; k++) { const tk = t0 + .45 + k * .5, o = oc.createOscillator(), e = oc.createGain(); o.type = "square"; o.frequency.value = k % 2 ? 1500 : 1900;
       e.gain.setValueAtTime(.05, tk); e.gain.exponentialRampToValueAtTime(.0001, tk + .05); o.connect(e).connect(out); o.start(tk); o.stop(tk + .06); } }
-  if (curMode() === "globe" || PORT) { const gw = curMode() === "globe" ? .16 : .1, nb = oc.createBuffer(1, Math.ceil(.8 * oc.sampleRate), oc.sampleRate), d = nb.getChannelData(0); let z = 12345; for (let i = 0; i < d.length; i++) { z = (z * 1103515245 + 12345) % 2147483648; d[i] = z / 1073741824 - 1; }
+  if ((curMode() === "globe" || PORT) && !S.raceStops) { const gw = curMode() === "globe" ? .16 : .1, nb = oc.createBuffer(1, Math.ceil(.8 * oc.sampleRate), oc.sampleRate), d = nb.getChannelData(0); let z = 12345; for (let i = 0; i < d.length; i++) { z = (z * 1103515245 + 12345) % 2147483648; d[i] = z / 1073741824 - 1; }
     S.items.forEach((x, i) => { const t0 = S.intro + S.st[i] + S.pause[i], b = oc.createBufferSource(), f = oc.createBiquadFilter(), e = oc.createGain(); b.buffer = nb; f.type = "bandpass"; f.Q.value = 1.4;
       f.frequency.setValueAtTime(350, t0); f.frequency.exponentialRampToValueAtTime(2600, t0 + .55); e.gain.setValueAtTime(.0001, t0); e.gain.exponentialRampToValueAtTime(gw, t0 + .22); e.gain.exponentialRampToValueAtTime(.0001, t0 + .75);
       b.connect(f).connect(e).connect(out); b.start(t0); b.stop(t0 + .8); }); }

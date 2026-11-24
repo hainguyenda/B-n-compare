@@ -201,7 +201,7 @@ drawFace(ctx, 0, cy, radius, emotion, lookDir, outlineW, time);
 if (!isMystery && emotion === 'angry') {
 drawSteamPuffs(ctx, radius, cy, time);
 }
-if (!isMystery && emotion === 'shocked') {
+if (!isMystery && (emotion === 'shocked' || emotion === 'tired')) {
 drawSweatDrops(ctx, radius, cy, time);
 }
 if (hasCrown) {
@@ -263,6 +263,25 @@ ctx.beginPath();
 ctx.moveTo(-eyeW * 0.75, 0);
 ctx.lineTo(eyeW * 0.75, 0);
 ctx.stroke();
+} else if (emotion === 'tired') { // out of breath: heavy drooping lids, pupils low
+ctx.fillStyle = '#FFFFFF';
+ctx.strokeStyle = '#111111';
+ctx.lineWidth = Math.max(2.2, outlineW * 0.72);
+ctx.beginPath();
+ctx.ellipse(0, eyeH * 0.15, eyeW, eyeH * 0.7, 0, 0, Math.PI);
+ctx.closePath();
+ctx.fill();
+ctx.stroke();
+ctx.fillStyle = '#111111';
+ctx.beginPath();
+ctx.arc(0, eyeH * 0.45, Math.max(2.2, r * 0.055), 0, Math.PI * 2);
+ctx.fill();
+ctx.lineWidth = Math.max(3, outlineW * 0.9);
+ctx.lineCap = 'round';
+ctx.beginPath();
+ctx.moveTo(-eyeW * 1.15, eyeH * (side === -1 ? 0.35 : 0.0));
+ctx.lineTo(eyeW * 1.15, eyeH * (side === -1 ? 0.0 : 0.35));
+ctx.stroke();
 } else if (emotion === 'proud') {
 ctx.strokeStyle = '#111111';
 ctx.lineWidth = Math.max(3, outlineW * 0.9);
@@ -307,6 +326,27 @@ ctx.restore();
 }
 ctx.restore();
 });
+if (emotion === 'tired') { // panting: open mouth that pulses, tongue hanging out
+const mx = cx + eyeShiftX;
+const my = cy + r * 0.38;
+const pant = 1 + 0.22 * Math.sin(time * 11);
+const mw = r * 0.25;
+const mh = r * 0.17 * pant;
+ctx.save();
+ctx.fillStyle = '#5B1219';
+ctx.strokeStyle = '#111111';
+ctx.lineWidth = Math.max(2.2, outlineW * 0.7);
+ctx.beginPath();
+ctx.ellipse(mx, my, mw, mh, 0, 0, Math.PI * 2);
+ctx.fill();
+ctx.stroke();
+ctx.fillStyle = '#F472B6';
+ctx.beginPath();
+ctx.ellipse(mx + mw * 0.15, my + mh * 0.85, mw * 0.5, mh * 0.75, 0.15, 0, Math.PI * 2);
+ctx.fill();
+ctx.stroke();
+ctx.restore();
+}
 if (emotion === 'shocked') {
 const mx = cx + eyeShiftX;
 const my = cy + r * 0.34;
