@@ -1,0 +1,22 @@
+{
+  "title": "Which Country Grows the Most Coffee?",
+  "mode": "race",
+  "hook": "WHO WINS|THE COFFEE RACE?",
+  "quiz": true,
+  "spotlight": "VN",
+  "unit": "60-kg bags",
+  "order": "countdown",
+  "source": "Data: USDA FAS, Coffee: World Markets and Trade (SỐ LIỆU MINH HOẠ – thay bằng số thật trước khi đăng)",
+  "countries": [
+    { "code": "BR", "value": 64700000, "fact": "Grows about 1 in 3 coffee beans on Earth" },
+    { "code": "VN", "value": 29000000, "fact": "The world's #1 grower of robusta beans" },
+    { "code": "CO", "value": 12900000, "fact": "Famous for growing only arabica beans" },
+    { "code": "ID", "value": 10900000 },
+    { "code": "ET", "value": 8200000 },
+    { "code": "UG", "value": 6900000 },
+    { "code": "IN", "value": 6000000 },
+    { "code": "HN", "value": 5600000 },
+    { "code": "PE", "value": 4200000 },
+    { "code": "MX", "value": 4000000 }
+  ]
+}

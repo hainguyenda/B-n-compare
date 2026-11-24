@@ -29,6 +29,7 @@ Nên dùng `"mode": "stack"` cho Shorts. Ví dụ: `examples/short-ca-phe.json`.
 | `ball` | Countryball nhí nhảnh |
 | `globe` | Quả địa cầu xoay tới từng nước, cột sáng cao theo giá trị, tiếng vút mỗi lần xoay |
 | `bubble` | Bản đồ phẳng, bong bóng to theo giá trị mọc lên trên từng nước |
+| `race` | Đường đua: mỗi nước là một quả bóng chạy trong làn riêng, cùng xuất phát (có tiếng đếm "3, 2, 1, GO!"), nước nào hết số liệu thì dừng và hiện hạng, #1 về đích có pháo giấy. Vạch trên đường là mốc số liệu. Nên dùng tối đa khoảng 12 nước. Ví dụ: `examples/duong-dua-ca-phe.json` |
 
 Ví dụ đầy đủ: `examples/qua-dia-cau-ca-phe.json`.
 
