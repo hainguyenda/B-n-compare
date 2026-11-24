@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bản Đồ Studio – Video bản đồ thế giới bằng code</title>
+<style>
+  :root { --bg:#0f1115; --card:#181b22; --line:#2a2f3a; --text:#e8e6e1; --muted:#9a9ca3; --accent:#e0a64b; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background:var(--bg); color:var(--text); }
+  main { max-width:1080px; margin:0 auto; padding:28px 18px 60px; }
+  h1 { font-size:26px; margin:0 0 4px; }
+  .sub { color:var(--muted); margin:0 0 22px; font-size:14px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px; margin-bottom:16px; }
+  h2 { font-size:15px; margin:0 0 12px; color:var(--accent); text-transform:uppercase; letter-spacing:.06em; }
+  textarea { width:100%; height:280px; background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:12px; font:13px/1.5 ui-monospace, Consolas, monospace; resize:vertical; }
+  button { background:var(--accent); color:#111; border:0; border-radius:8px; padding:10px 16px; font-weight:600; font-size:14px; cursor:pointer; }
+  button.ghost { background:transparent; color:var(--text); border:1px solid var(--line); }
+  button:disabled { opacity:.5; cursor:not-allowed; }
+  .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:12px; }
+  canvas { width:100%; display:block; border-radius:8px; border:1px solid var(--line); background:#000; }
+  select { background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:8px 10px; font-size:14px; }
+  input[type=range] { flex:1; min-width:160px; accent-color:var(--accent); }
+  .msg { font-size:13px; color:var(--muted); }
+  .err { color:#ff8a80; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  td { border-top:1px solid var(--line); padding:7px 8px; vertical-align:top; }
+  td:first-child { color:var(--accent); font-family:ui-monospace, Consolas, monospace; white-space:nowrap; }
+  pre { background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:12px; font-size:13px; white-space:pre-wrap; margin:10px 0 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Bản Đồ Studio</h1>
+  <p class="sub">Dán code → xem thử → xuất video bản đồ thế giới. Bản đồ giữ nguyên, nước nào được nhắc thì sáng lên. Chạy ngay trên trình duyệt, không tốn credit.</p>
+
+  <div class="card">
+    <h2>1. Dán code</h2>
+    <textarea id="code" spellcheck="false"></textarea>
+    <div class="row">
+      <button id="run">Chạy xem thử</button>
+      <button id="sample" class="ghost">Nạp code mẫu</button>
+      <span class="msg" style="color:var(--text)">Khung hình:</span>
+      <select id="fmt"><option value="land">16:9 · YouTube</option><option value="port">9:16 · Shorts / TikTok</option></select>
+      <span class="msg" style="color:var(--text)">Kiểu hình:</span>
+      <select id="vmode"><option value="auto">Theo code (mode)</option><option value="map">Bản đồ sáng lên</option><option value="stack">Cột 3D to dần</option><option value="split">Cột 3D + bản đồ nhỏ</option><option value="ball">Countryball nhí nhảnh</option></select>
+      <span class="msg" style="color:var(--text)">Nền bóng:</span>
+      <select id="btheme"><option value="auto">Tự đổi (trời xanh → hoàng hôn)</option><option value="comic_sky">Trời xanh</option><option value="sunset_drama">Hoàng hôn</option><option value="studio_dark">Studio tối</option></select>
+      <span id="msg" class="msg">Đang tải bản đồ…</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>2. Xem trước</h2>
+    <canvas id="cv" width="1920" height="1080"></canvas>
+    <div class="row">
+      <button id="play" disabled>Phát</button>
+      <input id="seek" type="range" min="0" max="1000" value="0" disabled>
+      <span id="time" class="msg">0:00 / 0:00</span>
+    </div>
+    <div class="row">
+      <span class="msg" style="color:var(--text)">Nhạc nền:</span>
+      <select id="music"><option value="gen">Nhạc tự tạo (có tiếng "ting" mỗi nước)</option><option value="fast">Nhạc tự tạo – NHANH (cho Shorts)</option><option value="file">Dùng file nhạc của bạn</option><option value="off">Tắt nhạc</option></select>
+      <input id="mfile" type="file" accept="audio/*" style="display:none">
+      <span class="msg">Âm lượng</span><input id="vol" type="range" min="0" max="100" value="70" style="flex:0 1 160px">
+      <span id="amsg" class="msg"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>3. Xuất video</h2>
+    <div class="row" style="margin-top:0">
+      <button id="export" disabled>Xuất video 1080p</button>
+      <button id="xcancel" class="ghost" style="display:none">Huỷ</button>
+      <span id="xmsg" class="msg">Video được dựng thẳng ra file .mp4 ngay trong trình duyệt, không cần quay màn hình. Chỉ cần không đóng tab.</span>
+    </div>
+    <progress id="xprog" max="1000" value="0" style="display:none;width:100%;height:16px;margin-top:12px;accent-color:var(--accent)"></progress>
+  </div>
+
+  <div class="card">
+    <h2>Cách viết code</h2>
+    <table>
+      <tr><td>title, subtitle</td><td>Tiêu đề và dòng phụ ở phía trên bản đồ.</td></tr>
+      <tr><td>intro</td><td>Các dòng chữ mở đầu video (tối đa 2–3 dòng).</td></tr>
+      <tr><td>countries</td><td>Danh sách nước: <b>code</b> là mã 2 chữ cái (VN, US, JP…), <b>value</b> là con số, <b>name</b> để đổi tên hiển thị (không bắt buộc).</td></tr>
+      <tr><td>order</td><td>"countdown": đếm ngược từ thấp lên hạng 1 · "top": từ hạng 1 xuống · "list": đúng thứ tự bạn viết.</td></tr>
+      <tr><td>unit, prefix, suffix</td><td>Đơn vị dưới con số (people, km²…) và ký hiệu trước/sau con số ($, %…).</td></tr>
+      <tr><td>decimals, compact</td><td><b>decimals</b>: số chữ số thập phân (ví dụ 1 cho 4.5 con/phụ nữ). <b>compact</b>: false để danh sách bên trái hiện số đầy đủ thay vì 12K, 3.5M.</td></tr>
+      <tr><td>pace</td><td>"rank" (mặc định): hạng thấp chạy nhanh, top 3 chậm lại tạo cao trào · "even": đều như cũ. secondsPerCountry là nhịp gốc.</td></tr>
+      <tr><td>hook</td><td>Câu mở đầu hiện ngay khung hình đầu, đè lên 3 cột top 3 (nước #1 bị che bằng dấu ?). Ví dụ "Guess the #1?". Bỏ trống thì dùng intro; false để tắt.</td></tr>
+      <tr><td>outroMode</td><td>"quick" (mặc định cho Shorts: câu hỏi comment + end card ~3.5s) · "loop" (không end card, không fade, nhạc/hình nối vòng lặp) · "full" (thẻ outro đầy đủ như cũ, mặc định cho video dài có outro).</td></tr>
+      <tr><td>question</td><td>Câu hỏi hiện ở cuối chế độ quick, ví dụ "Did you guess #1? Tell us below".</td></tr>
+      <tr><td>suspense</td><td>Số giây dừng lại trước nước #1 (mặc định 0.9 Shorts / 1.1 video dài). Đặt 0 để tắt.</td></tr>
+      <tr><td>music</td><td>"gen" · "fast" (nhịp nhanh cho Shorts) · "off". Bạn vẫn có thể chọn file nhạc riêng ở ô Nhạc nền.</td></tr>
+      <tr><td>mode</td><td>"map": bản đồ sáng lên · "stack": cột 3D to dần, nước đứng đầu vọt lên cuối video · "split": cột 3D kèm bản đồ nhỏ góc phải. Có thể ép bằng ô "Kiểu hình".</td></tr>
+      <tr><td>visualStyle, ballTheme</td><td>"visualStyle": "countryball" bật chế độ bóng quốc gia nhí nhảnh (hoặc chọn ô Kiểu hình = Countryball nhí nhảnh; cũng có thể viết "mode": "ball"). "ballTheme": "comic_sky" (trời xanh) · "sunset_drama" (hoàng hôn) · "studio_dark" (nền tối). Bỏ trống thì tự đổi từ trời xanh sang hoàng hôn khi vào Top 3.</td></tr>
+      <tr><td>stack</td><td>Chất liệu cột: "people" (đám đông) · "money" (tiền) · "gold" (vàng) · "oil" (thùng dầu) · "crops" (nông sản) · "cubes" (khối màu). Bỏ trống thì app tự đoán theo tiêu đề.</td></tr>
+      <tr><td>scale</td><td>"linear" (mặc định) · "hybrid" khi nước đầu quá vượt trội · "volume" lấy căn bậc 3.</td></tr>
+      <tr><td>secondsPerCountry</td><td>Số giây dành cho mỗi nước (mặc định 2.4).</td></tr>
+      <tr><td>color</td><td>Màu của nước được tô sáng, ví dụ "#F5A524".</td></tr>
+      <tr><td>outro</td><td>Cảnh kết: <b>big</b> (chữ to), <b>text</b>, <b>cta</b> (câu hỏi cuối) và <b>highlight</b> (các nước sáng lên lúc kết).</td></tr>
+      <tr><td>source</td><td>Dòng ghi nguồn số liệu ở góc dưới.</td></tr>
+      <tr><td>endCard</td><td>Cảnh cuối kêu gọi Like &amp; Subscribe: <b>channel</b> (tên kênh), <b>handle</b> (@kênh), <b>text</b> (câu nhắn), <b>seconds</b> (số giây, mặc định 8). Bỏ dòng này nếu không muốn có cảnh cuối.</td></tr>
+      <tr><td>Khung hình</td><td>Chọn 16:9 (YouTube) hoặc 9:16 (YouTube Shorts, TikTok) cạnh nút Chạy xem thử. Video dọc nên ngắn: khoảng 10 nước, mỗi nước 2–3 giây.</td></tr>
+      <tr><td>Nhạc nền</td><td>Chọn ngay dưới khung xem trước, không cần viết trong code. Nhạc được ghi luôn vào video khi xuất.</td></tr>
+    </table>
+    <pre id="prompt">Câu lệnh mẫu để nhờ AI viết code: "Viết code JSON cho app Bản Đồ Studio theo đúng cấu trúc của code mẫu dưới đây, chủ đề: [10 nước có diện tích lớn nhất thế giới]. Dùng số liệu thật, ghi nguồn vào trường source, chữ trong video bằng tiếng Anh. Chỉ trả về JSON." Sau đó dán kèm code mẫu.</pre>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script>
+const SAMPLE = {
+  title: "The 10 Most Populated Countries",
+  mode: "stack",
+  stack: "people",
+  subtitle: "Population in 2026",
+  intro: ["Which countries have", "the most people on Earth?"],
+  unit: "people",
+  order: "countdown",
+  secondsPerCountry: 2.4,
+  color: "#F5A524",
+  source: "Data: UN World Population Prospects 2024 (2026 projection) via Worldometer",
+  countries: [
+    { code: "IN", value: 1476625576 },
+    { code: "CN", value: 1412914089 },
+    { code: "US", value: 349035494, name: "United States" },
+    { code: "ID", value: 287886782 },
+    { code: "PK", value: 259299792 },
+    { code: "NG", value: 242431832 },
+    { code: "BR", value: 213562666 },
+    { code: "BD", value: 177818044 },
+    { code: "RU", value: 143394458 },
+    { code: "ET", value: 138902185 }
+  ],
+  outro: {
+    big: "More than 1 in 3",
+    text: "people on Earth live in just two countries.",
+    cta: "Which ranking should we map next?",
+    highlight: ["IN", "CN"]
+  }
+};
+const MAPS = [
+  "https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_110m_admin_0_countries.geojson",
+  "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson"
+];
+const $ = id => document.getElementById(id);
+let W = 1920, H = 1080, PORT = false, L = null;
+const cv = $("cv"), ctx = cv.getContext("2d");
+const LAY = {
+  land: { map: [[520, 175], [1880, 955]], ms: 1,
+    head: { align: "left", x: 520, ty: 82, ts: 50, sy: 124, ss: 25, w: 1340 }, src: { align: "right", x: 1880, y: 1062, w: 1300, s: 17 },
+    p: { x: 36, y: 36, w: 430, h: 1008, tx: 70, head: 104, hs: 22, rank: [66, 232, 124], flag: [302, 186, 130], name: [306, 46, 362], val: [372, 48], unit: [408, 22], line: 446, right: 432, ly: 492, step: 54, rows: 10, ls: 24, oy: 180, ow: 370, cta: 860 } },
+  port: { map: [[30, 260], [1050, 880]], ms: .75,
+    head: { align: "center", x: 540, ty: 150, ts: 58, sy: 205, ss: 30, w: 1000 }, src: { align: "center", x: 540, y: 1880, w: 1000, s: 22 },
+    p: { x: 40, y: 920, w: 1000, h: 900, tx: 80, head: 985, hs: 26, rank: [76, 1115, 130], flag: [850, 1068, 150], name: [1205, 60, 920], val: [1280, 58], unit: [1318, 28], line: 1355, right: 1000, ly: 1415, step: 56, rows: 8, ls: 30, oy: 1060, ow: 900, cta: 1760 } }
+};
+const FONT = '"Inter","Segoe UI",system-ui,-apple-system,Roboto,sans-serif';
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const eout = x => 1 - Math.pow(1 - x, 3);
+const back = x => { const c = 1.7; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const ICON = { like: new Path2D("M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"), bell: new Path2D("M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"), cursor: new Path2D("M0 0L0 34L9 25L15 39L21 36L15 23L27 23Z") };
+let C = [], BY = {}, BYN = {}, GJ = null; const flags = {};
+const CONT = { "Asia":"#F5A524", "Africa":"#2DD4BF", "Europe":"#8B9BFF", "North America":"#F472B6", "South America":"#A3E635", "Oceania":"#38BDF8" };
+let AC = null, track = null, src = null, startAt = 0, userBuf = null, renderId = 0;
+let P = null, S = null, base = null, t = 0, playing = false, last = 0;
+
+const TEX = {}; let texReady = false;
+    function buildTextures() {
+      // 1. PEOPLE CROWD TEXTURE (Thousands of packed colorful miniature human silhouettes)
+      const pCan = document.createElement("canvas");
+      pCan.width = 256;
+      pCan.height = 256;
+      const pCtx = pCan.getContext("2d");
+      pCtx.fillStyle = "#121826";
+      pCtx.fillRect(0, 0, 256, 256);
+
+      const shirtPalette = [
+        "#ef4444", "#3b82f6", "#10b981", "#f59e0b", "#ec4899",
+        "#8b5cf6", "#06b6d4", "#eab308", "#f97316", "#e2e8f0",
+        "#60a5fa", "#34d399", "#fb7185", "#a78bfa"
+      ];
+      const skinPalette = ["#fcd34d", "#fbbf24", "#f59e0b", "#fed7aa", "#d97706"];
+
+      // Draw dense rows of tiny people from top to bottom so they overlap naturally like a real stadium/crowd
+      for (let row = 0; row < 28; row++) {
+        const y = row * 9.2 + 6;
+        for (let col = 0; col < 32; col++) {
+          const x = col * 8.2 + (row % 2) * 4 + ((Math.sin(row * 17 + col * 31) * 1.8));
+          const shirt = shirtPalette[(row * 7 + col * 13) % shirtPalette.length];
+          const skin = skinPalette[(row * 3 + col * 5) % skinPalette.length];
+
+          // Shadow
+          pCtx.fillStyle = "rgba(0,0,0,0.45)";
+          pCtx.fillRect(x - 2.5, y + 1, 5, 7);
+
+          // Shoulders / Torso
+          pCtx.fillStyle = shirt;
+          pCtx.beginPath();
+          pCtx.roundRect(x - 2.6, y + 1.2, 5.2, 5.5, 1.5);
+          pCtx.fill();
+
+          // Head
+          pCtx.fillStyle = skin;
+          pCtx.beginPath();
+          pCtx.arc(x, y - 1.2, 2.0, 0, Math.PI * 2);
+          pCtx.fill();
+
+          // Hair highlight
+          pCtx.fillStyle = "rgba(15,23,42,0.7)";
+          pCtx.beginPath();
+          pCtx.arc(x, y - 1.8, 1.7, Math.PI, Math.PI * 2);
+          pCtx.fill();
+        }
+      }
+      TEX.people = pCan;
+
+      // 2. MONEY STACK TEXTURE ($100 USD Cash Bundles)
+      const mCan = document.createElement("canvas");
+      mCan.width = 256;
+      mCan.height = 256;
+      const mCtx = mCan.getContext("2d");
+      mCtx.fillStyle = "#1c3d2a";
+      mCtx.fillRect(0, 0, 256, 256);
+      {
+        const cols = 4, rows = 8, bw = 256 / cols, bh = 256 / rows;
+        for (let r = 0; r < rows; r++) {
+          for (let c = -1; c <= cols; c++) {
+            const off = (r % 2) * (bw * 0.5);
+            const bx = c * bw + off, by = r * bh;
+            const cc = (c + cols) % cols;
+            const tone = (r * 3 + cc * 5) % 4;
+            const base = ["#c9dcb4", "#bcd3a6", "#d2e3bd", "#b5cc9f"][tone];
+            // bill body
+            const g = mCtx.createLinearGradient(bx, by, bx, by + bh);
+            g.addColorStop(0, base); g.addColorStop(1, "#8fb078");
+            mCtx.fillStyle = g;
+            mCtx.fillRect(bx + 1, by + 1, bw - 2, bh - 4);
+            // fine guilloche lines
+            mCtx.strokeStyle = "rgba(40,90,50,0.28)"; mCtx.lineWidth = 0.6;
+            for (let k = 0; k < 6; k++) {
+              mCtx.beginPath();
+              mCtx.moveTo(bx + 3, by + 4 + k * 3.2);
+              mCtx.bezierCurveTo(bx + bw * 0.3, by + 1 + k * 3.2, bx + bw * 0.7, by + 8 + k * 3.2, bx + bw - 3, by + 4 + k * 3.2);
+              mCtx.stroke();
+            }
+            // double border
+            mCtx.strokeStyle = "#2f6b3f"; mCtx.lineWidth = 1.2;
+            mCtx.strokeRect(bx + 2.5, by + 2.5, bw - 5, bh - 7);
+            mCtx.strokeStyle = "rgba(47,107,63,0.55)"; mCtx.lineWidth = 0.6;
+            mCtx.strokeRect(bx + 4.5, by + 4.5, bw - 9, bh - 11);
+            // center oval + portrait silhouette
+            const cx = bx + bw / 2, cy = by + (bh - 3) / 2;
+            mCtx.fillStyle = "#e4efd3";
+            mCtx.beginPath(); mCtx.ellipse(cx, cy, bw * 0.17, bh * 0.36, 0, 0, Math.PI * 2); mCtx.fill();
+            mCtx.strokeStyle = "#2f6b3f"; mCtx.lineWidth = 1; mCtx.stroke();
+            mCtx.save(); mCtx.beginPath(); mCtx.ellipse(cx, cy, bw * 0.17 - 0.5, bh * 0.36 - 0.5, 0, 0, Math.PI * 2); mCtx.clip();
+            mCtx.fillStyle = "#4d7a58";
+            mCtx.beginPath(); mCtx.arc(cx, cy - 1.5, 3.4, 0, Math.PI * 2); mCtx.fill();
+            mCtx.beginPath(); mCtx.ellipse(cx, cy + bh * 0.36, 7, 6, 0, Math.PI, Math.PI * 2); mCtx.fill();
+            mCtx.restore();
+            // corner 100 + big 100
+            mCtx.fillStyle = "#1f5130"; mCtx.font = "bold 6px sans-serif"; mCtx.textAlign = "left";
+            mCtx.fillText("100", bx + 5.5, by + 11);
+            mCtx.textAlign = "right"; mCtx.fillText("100", bx + bw - 5.5, by + bh - 7.5);
+            mCtx.font = "bold 5px sans-serif"; mCtx.textAlign = "center";
+            mCtx.fillText("$", bx + bw * 0.22, by + bh * 0.62); mCtx.fillText("$", bx + bw * 0.78, by + bh * 0.4);
+            // stack edge (paper layers) under the bill
+            mCtx.fillStyle = "#7c9c68"; mCtx.fillRect(bx + 1, by + bh - 3, bw - 2, 2);
+            mCtx.fillStyle = "rgba(255,255,255,0.35)"; mCtx.fillRect(bx + 1, by + bh - 3, bw - 2, 0.7);
+            mCtx.fillStyle = "#1c3d2a"; mCtx.fillRect(bx + 1, by + bh - 1, bw - 2, 1);
+          }
+        }
+        // shine
+        const sh = mCtx.createLinearGradient(0, 0, 256, 256);
+        sh.addColorStop(0, "rgba(255,255,255,0.10)"); sh.addColorStop(0.5, "rgba(255,255,255,0)"); sh.addColorStop(1, "rgba(0,0,0,0.12)");
+        mCtx.fillStyle = sh; mCtx.fillRect(0, 0, 256, 256);
+      }
+      TEX.money = mCan;
+
+      // 3. GOLD BULLION TEXTURE
+      const gCan = document.createElement("canvas");
+      gCan.width = 256;
+      gCan.height = 256;
+      const gCtx = gCan.getContext("2d");
+      gCtx.fillStyle = "#78350f";
+      gCtx.fillRect(0, 0, 256, 256);
+      const gCols = 4;
+      const gRows = 10;
+      const gw = 256 / gCols;
+      const gh = 256 / gRows;
+      for (let r = 0; r < gRows; r++) {
+        for (let c = 0; c < gCols; c++) {
+          const offset = (r % 2) * (gw * 0.25);
+          const gx = (c * gw + offset) % 256;
+          const gy = r * gh;
+          const grad = gCtx.createLinearGradient(gx, gy, gx + gw, gy + gh);
+          grad.addColorStop(0, "#fef08a");
+          grad.addColorStop(0.45, "#eab308");
+          grad.addColorStop(1, "#a16207");
+          gCtx.fillStyle = grad;
+          gCtx.fillRect(gx + 1.5, gy + 1.5, gw - 3, gh - 3);
+          // Bevel highlight
+          gCtx.strokeStyle = "rgba(255,255,255,0.5)";
+          gCtx.lineWidth = 1;
+          gCtx.strokeRect(gx + 3, gy + 3, gw - 6, gh - 6);
+        }
+      }
+      TEX.gold = gCan;
+
+      // 4. OIL BARRELS TEXTURE
+      const oCan = document.createElement("canvas");
+      oCan.width = 256;
+      oCan.height = 256;
+      const oCtx = oCan.getContext("2d");
+      oCtx.fillStyle = "#0f172a";
+      oCtx.fillRect(0, 0, 256, 256);
+      const oCols = 6;
+      const oRows = 6;
+      const ow = 256 / oCols;
+      const oh = 256 / oRows;
+      for (let r = 0; r < oRows; r++) {
+        for (let c = 0; c < oCols; c++) {
+          const ox = c * ow;
+          const oy = r * oh;
+          const grad = oCtx.createLinearGradient(ox, oy, ox + ow, oy);
+          grad.addColorStop(0, "#1e293b");
+          grad.addColorStop(0.4, "#ea580c");
+          grad.addColorStop(0.6, "#fb923c");
+          grad.addColorStop(1, "#0f172a");
+          oCtx.fillStyle = grad;
+          oCtx.fillRect(ox + 2, oy + 2, ow - 4, oh - 4);
+          // Barrel ribs
+          oCtx.fillStyle = "rgba(255,255,255,0.35)";
+          oCtx.fillRect(ox + 2, oy + oh * 0.3, ow - 4, 2);
+          oCtx.fillRect(ox + 2, oy + oh * 0.7, ow - 4, 2);
+        }
+      }
+      TEX.oil = oCan;
+
+      // 5. GRAIN / RICE SACKS TEXTURE
+      const cCan = document.createElement("canvas");
+      cCan.width = 256;
+      cCan.height = 256;
+      const cCtx = cCan.getContext("2d");
+      cCtx.fillStyle = "#422006";
+      cCtx.fillRect(0, 0, 256, 256);
+      const cCols = 4;
+      const cRows = 8;
+      const cw = 256 / cCols;
+      const ch = 256 / cRows;
+      for (let r = 0; r < cRows; r++) {
+        for (let c = 0; c < cCols; c++) {
+          const cx = c * cw;
+          const cy = r * ch;
+          cCtx.fillStyle = (r + c) % 2 === 0 ? "#d97706" : "#b45309";
+          cCtx.beginPath();
+          cCtx.roundRect(cx + 2, cy + 2, cw - 4, ch - 4, 6);
+          cCtx.fill();
+          cCtx.fillStyle = "#fef3c7";
+          cCtx.fillRect(cx + cw * 0.25, cy + ch * 0.35, cw * 0.5, ch * 0.3);
+        }
+      }
+      TEX.crops = cCan;
+    }
+    function drawMiniHumanFigure(ctx, cx, bottomY, h, shirtColor) {
+      if (h < 4) return;
+      const headR = Math.max(1.5, h * 0.16);
+      const bodyH = h * 0.46;
+      const legH = h * 0.34;
+      const shoulderW = Math.max(2.5, h * 0.38);
+
+      // Legs
+      ctx.fillStyle = "#1e293b";
+      ctx.fillRect(cx - shoulderW * 0.32, bottomY - legH, shoulderW * 0.26, legH);
+      ctx.fillRect(cx + shoulderW * 0.06, bottomY - legH, shoulderW * 0.26, legH);
+
+      // Torso
+      ctx.fillStyle = shirtColor;
+      ctx.beginPath();
+      ctx.roundRect(cx - shoulderW * 0.5, bottomY - legH - bodyH, shoulderW, bodyH, Math.max(1, h * 0.08));
+      ctx.fill();
+
+      // Head
+      ctx.fillStyle = "#fde68a";
+      ctx.beginPath();
+      ctx.arc(cx, bottomY - legH - bodyH - headR * 0.9, headR, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    function hexToRgb(hex) {
+      const clean = (hex || "#3b82f6").replace("#", "");
+      const num = parseInt(clean.length === 3 ? clean.split("").map(c => c + c).join("") : clean, 16);
+      return {
+        r: (num >> 16) & 255,
+        g: (num >> 8) & 255,
+        b: num & 255
+      };
+    }
+    function shadeHex(hex, percent) {
+      const { r, g, b } = hexToRgb(hex);
+      const amt = Math.round(2.55 * percent);
+      const R = Math.max(0, Math.min(255, r + amt));
+      const G = Math.max(0, Math.min(255, g + amt));
+      const B = Math.max(0, Math.min(255, b + amt));
+      return `rgb(${R}, ${G}, ${B})`;
+    }
+// ================= 3D TOWER MODE =================
+const MONO = 'ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace';
+const lerp2 = (a, b, k) => a + (b - a) * k;
+const easeIO = x => { x = clamp(x); return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+
+function curMode(c0) {
+  const v = $("vmode").value, c = c0 || (S && S.cfg) || {}, raw = v === "auto" ? (c.visualStyle === "countryball" ? "ball" : (c.mode || "map")) : v;
+  return raw === "stack3d" ? "stack" : raw === "countryball" ? "ball" : raw;
+}
+function stackKind(cfg) {
+  const o = String(cfg.stack || "").toLowerCase();
+  if (["people", "money", "gold", "oil", "crops", "cubes"].includes(o)) return o;
+  const t = [cfg.title, cfg.subtitle, cfg.unit, cfg.prefix, cfg.suffix, cfg.panelTitle].join(" ").toLowerCase();
+  if (/gold/.test(t)) return "gold";
+  if (/\boil\b|barrel/.test(t)) return "oil";
+  if (/rice|wheat|coffee|cocoa|grain|crop|harvest/.test(t)) return "crops";
+  if (/billionaire|people|person|population|populated|inhabitant|users|tourist|visitor|soldier|personnel|resident|crowded/.test(t)) return "people";
+  if (/gdp|usd|\$|dollar|econom|export|import|spending|expenditure|wealth|revenue|money/.test(t)) return "money";
+  return "cubes";
+}
+function mscale(v, cfg) {
+  const x = Math.max(1e-9, +v || 0);
+  return cfg.scale === "volume" ? Math.cbrt(x) : cfg.scale === "hybrid" ? Math.pow(x, .72) : x;
+}
+function flagBox(code, x, y, w, h, r) { // flag image (or code letters) clipped to a rounded box
+  const f = flags[code];
+  ctx.save(); ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.clip();
+  if (f && f.ok) ctx.drawImage(f.im, x, y, w, h);
+  else { ctx.fillStyle = "#1e293b"; ctx.fillRect(x, y, w, h); ctx.fillStyle = "#fff"; ctx.font = "800 " + Math.max(8, h * .5) + "px " + FONT; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(code || "", x + w / 2, y + h / 2); }
+  ctx.restore();
+}
+
+function drawTower(g, item, o) {
+  // g: {cx,w,h,floor}  o: {kind,cfg,cur,grow,val,t,label,card,compact,badge}
+  const w = Math.max(14, g.w), h = Math.max(6, g.h), dx = w * .34, dy = -w * .22, L0 = g.cx - w / 2, floor = g.floor, top = floor - h;
+  const tex = TEX[o.kind] || null, theme = o.cfg.color || "#3b82f6";
+  ctx.save();
+  // floor shadow
+  ctx.fillStyle = "rgba(0,0,0,.55)"; ctx.beginPath();
+  ctx.moveTo(L0 - w * .08, floor + 6); ctx.lineTo(L0 + w + dx + w * .12, floor + dy + 6); ctx.lineTo(L0 + w + dx + w * .22, floor + dy + 22); ctx.lineTo(L0 + w * .05, floor + 22); ctx.closePath(); ctx.fill();
+  // front face
+  ctx.save(); ctx.beginPath(); ctx.rect(L0, top, w, h); ctx.clip();
+  if (tex) {
+    const ts = Math.max(28, Math.min(180, w * .85));
+    for (let ty = floor - ts; ty > top - ts; ty -= ts) for (let tx = L0; tx < L0 + w; tx += ts) ctx.drawImage(tex, tx, ty, ts + 1, ts + 1);
+    const sh = ctx.createLinearGradient(L0, top, L0, floor); sh.addColorStop(0, "rgba(255,255,255,.08)"); sh.addColorStop(.7, "rgba(0,0,0,.05)"); sh.addColorStop(1, "rgba(0,0,0,.45)");
+    ctx.fillStyle = sh; ctx.fillRect(L0, top, w, h);
+  } else {
+    const gr = ctx.createLinearGradient(L0, top, L0 + w, floor); gr.addColorStop(0, shadeHex(theme, 15)); gr.addColorStop(1, shadeHex(theme, -35)); ctx.fillStyle = gr; ctx.fillRect(L0, top, w, h);
+    const cell = Math.max(8, w / 8); ctx.strokeStyle = "rgba(255,255,255,.18)"; ctx.lineWidth = 1;
+    for (let gx = L0; gx <= L0 + w; gx += cell) { ctx.beginPath(); ctx.moveTo(gx, top); ctx.lineTo(gx, floor); ctx.stroke(); }
+    for (let gy = floor; gy >= top; gy -= cell) { ctx.beginPath(); ctx.moveTo(L0, gy); ctx.lineTo(L0 + w, gy); ctx.stroke(); }
+  }
+  ctx.restore();
+  ctx.strokeStyle = o.cur ? "rgba(255,255,255,.85)" : "rgba(255,255,255,.3)"; ctx.lineWidth = o.cur ? 2 : 1.2; ctx.strokeRect(L0, top, w, h);
+  // right face
+  ctx.save(); ctx.beginPath(); ctx.moveTo(L0 + w, top); ctx.lineTo(L0 + w + dx, top + dy); ctx.lineTo(L0 + w + dx, floor + dy); ctx.lineTo(L0 + w, floor); ctx.closePath(); ctx.clip();
+  if (tex) {
+    ctx.transform(1, dy / dx, 0, 1, L0 + w, top);
+    const ts = Math.max(24, Math.min(140, dx * 1.4));
+    for (let ty = -ts; ty < h + ts; ty += ts) for (let tx = 0; tx < dx + ts; tx += ts) ctx.drawImage(tex, tx, ty, ts + 1, ts + 1);
+    ctx.fillStyle = "rgba(0,0,0,.38)"; ctx.fillRect(0, 0, dx + 4, h + Math.abs(dy) + 4);
+  } else { ctx.fillStyle = shadeHex(theme, -48); ctx.fillRect(L0 + w, top + dy, dx + 2, h + Math.abs(dy) + 2); }
+  ctx.restore();
+  ctx.strokeStyle = o.cur ? "rgba(255,255,255,.65)" : "rgba(255,255,255,.22)"; ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.moveTo(L0 + w, top); ctx.lineTo(L0 + w + dx, top + dy); ctx.lineTo(L0 + w + dx, floor + dy); ctx.lineTo(L0 + w, floor); ctx.closePath(); ctx.stroke();
+  // roof
+  ctx.save(); ctx.beginPath(); ctx.moveTo(L0, top); ctx.lineTo(L0 + dx, top + dy); ctx.lineTo(L0 + w + dx, top + dy); ctx.lineTo(L0 + w, top); ctx.closePath(); ctx.clip();
+  if (tex) { ctx.drawImage(tex, L0, top + dy, w + dx, Math.abs(dy) + 4); ctx.fillStyle = "rgba(255,255,255,.16)"; ctx.fill(); } else { ctx.fillStyle = shadeHex(theme, 30); ctx.fill(); }
+  ctx.restore();
+  ctx.strokeStyle = o.cur ? "#fff" : "rgba(255,255,255,.4)"; ctx.lineWidth = o.cur ? 2 : 1.2;
+  ctx.beginPath(); ctx.moveTo(L0, top); ctx.lineTo(L0 + dx, top + dy); ctx.lineTo(L0 + w + dx, top + dy); ctx.lineTo(L0 + w, top); ctx.closePath(); ctx.stroke();
+  // little people standing on the roof
+  if (o.kind === "people" && w > 28) {
+    const ph = Math.max(7, Math.min(24, w * .11)), cols = Math.min(14, Math.max(3, Math.floor(w / (ph * .55)))), rows = Math.min(5, Math.max(2, Math.floor(Math.abs(dy) / (ph * .45))));
+    const pal = ["#ef4444", "#3b82f6", "#10b981", "#f59e0b", "#ec4899", "#38bdf8", "#a855f7"];
+    for (let r = rows - 1; r >= 0; r--) { const rf = (r + .5) / rows; for (let c = 0; c < cols; c++) {
+      const cf = (c + .5) / cols, hop = (o.cur && o.grow < .98) ? Math.abs(Math.sin(o.t * 15 + c * 1.7 + r * 2.3)) * ph * .28 : 0;
+      drawMiniHumanFigure(ctx, L0 + cf * w + rf * dx, top + rf * dy - hop, ph, pal[(c * 3 + r * 5) % pal.length]); } }
+  }
+  // flag badge on the front
+  if (w >= 34 && h >= 32) {
+    const bs = Math.min(w * .54, h * .52, 130);
+    if (bs >= 18) {
+      const cx = L0 + w * .5, cy = top + h * .46;
+      ctx.fillStyle = "rgba(9,13,22,.82)"; ctx.strokeStyle = "rgba(255,255,255,.9)"; ctx.lineWidth = Math.max(1.5, bs * .04);
+      ctx.beginPath(); ctx.roundRect(cx - bs * .5, cy - bs * .38, bs, bs * .76, bs * .14); ctx.fill(); ctx.stroke();
+      if (o.mystery) { ctx.save(); ctx.shadowColor = "#FFD23F"; ctx.shadowBlur = bs * .35; ctx.fillStyle = "#FFD23F"; ctx.font = "900 " + Math.round(bs * .5) + "px " + FONT; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("???", cx, cy + bs * .03); ctx.restore(); }
+      else flagBox(item.code, cx - bs * .44, cy - bs * .32, bs * .88, bs * .64, bs * .09);
+    }
+  }
+  // name pill above the roof
+  let roofX = L0 + w * .5 + dx * .5 + (o.shift || 0), roofY = top + dy - (o.kind === "people" ? 18 : 10);
+  if (o.label) {
+    const pf = Math.max(11, Math.min(20, w * .11)); ctx.font = "800 " + pf + "px " + FONT;
+    const txt = o.label, tw = ctx.measureText(txt).width, pw = tw + 20, ph2 = pf + 12; roofX = Math.max(pw / 2 + 10, Math.min(W - pw / 2 - 10, roofX));
+    ctx.fillStyle = o.cur ? "#f59e0b" : "rgba(15,23,42,.88)"; ctx.strokeStyle = o.cur ? "#fff" : "rgba(255,255,255,.35)"; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.roundRect(roofX - pw / 2, roofY - ph2, pw, ph2, 8); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = o.cur ? "#090d16" : "#f8fafc"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(txt, roofX, roofY - ph2 / 2 + 1);
+    if (o.badge) { // "2.3x Japan" tag above the pill
+      ctx.font = "700 15px " + FONT; const bw = ctx.measureText(o.badge).width + 22;
+      ctx.fillStyle = "rgba(15,23,42,.9)"; ctx.strokeStyle = "#38bdf8"; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.roundRect(roofX - bw / 2, roofY - ph2 - 40, bw, 30, 15); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#38bdf8"; ctx.fillText(o.badge, roofX, roofY - ph2 - 25);
+    }
+  }
+  // slanted white card on the floor
+  if (o.card) {
+    const cw = Math.max(54, Math.min(310, w * 1.12)), ch = Math.max(30, Math.min(115, cw * .39)), cxx = L0 + w / 2, cyy = floor + 12 + ch / 2;
+    ctx.save(); ctx.translate(cxx, cyy); ctx.rotate(-.045);
+    ctx.fillStyle = "rgba(0,0,0,.65)"; ctx.fillRect(-cw / 2 + 4, -ch / 2 + 6, cw, ch);
+    ctx.fillStyle = o.cur ? "#fff" : "#e2e8f0"; ctx.strokeStyle = o.cur ? "#f59e0b" : "#64748b"; ctx.lineWidth = o.cur ? 3 : 1.5;
+    ctx.beginPath(); ctx.roundRect(-cw / 2, -ch / 2, cw, ch, 4); ctx.fill(); ctx.stroke();
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    const nf = Math.max(9, Math.min(23, cw * .088)); ctx.fillStyle = "#090d16"; ctx.font = "900 " + nf + "px " + MONO;
+    let vt = o.mystery ? "???" : full(o.val); if (cw < 145 || ctx.measureText(vt).width > cw - 14) vt = short(o.val); ctx.fillText(vt, 0, -ch * .24);
+    if (o.cfg.unit) { ctx.fillStyle = "#475569"; ctx.font = "600 " + Math.max(7, Math.min(13, cw * .048)) + "px " + FONT; ctx.fillText(o.cfg.unit, 0, 0); }
+    const nmf = Math.max(9, Math.min(21, cw * .078)); ctx.font = "800 " + nmf + "px " + FONT; ctx.fillStyle = "#0f172a";
+    let nm = o.mystery ? "???" : item.name; const maxn = cw - nmf * 2.6; while (ctx.measureText(nm).width > maxn && nm.length > 3) nm = nm.slice(0, -1);
+    if (!o.mystery && nm !== item.name) nm += "…";
+    const nw = ctx.measureText(nm).width, fw2 = nmf * 1.45, fh2 = fw2 * .68, tot = fw2 + 6 + nw, x0 = -tot / 2;
+    if (!o.mystery) flagBox(item.code, x0, ch * .27 - fh2 / 2, fw2, fh2, 2); ctx.textAlign = "left"; ctx.fillText(nm, o.mystery ? -nw / 2 : x0 + fw2 + 6, ch * .27 + 1);
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+function drawPip(x, y, pw, ci, to, alpha) {
+  const [[mx0, my0], [mx1, my1]] = L.map, mw = mx1 - mx0, mh = my1 - my0, k = pw / mw, ph = mh * k, n = S.items.length;
+  ctx.save(); ctx.globalAlpha = alpha;
+  ctx.fillStyle = "rgba(6,10,19,.94)"; ctx.strokeStyle = "rgba(255,255,255,.22)"; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.roundRect(x - 6, y - 6, pw + 12, ph + 12, 12); ctx.fill(); ctx.stroke();
+  ctx.save(); ctx.beginPath(); ctx.roundRect(x, y, pw, ph, 8); ctx.clip();
+  ctx.drawImage(base, mx0, my0, mw, mh, x, y, pw, ph);
+  ctx.translate(x - mx0 * k, y - my0 * k); ctx.scale(k, k);
+  ctx.globalAlpha = alpha * .55; ctx.fillStyle = "#070B18"; ctx.fill(S.dark, "evenodd"); ctx.globalAlpha = alpha;
+  for (let i = 0; i < Math.min(ci, n); i++) { ctx.globalAlpha = alpha * .85; ctx.fillStyle = S.items[i].m.col; ctx.fill(S.items[i].m.p2, "evenodd"); }
+  ctx.globalAlpha = alpha;
+  const cur = ci >= 0 && ci < n ? S.items[ci].m : null;
+  if (cur) { ctx.fillStyle = cur.col; ctx.fill(cur.p2, "evenodd"); ctx.strokeStyle = "#fff"; ctx.lineWidth = 3 / k; ctx.stroke(cur.p2); ctx.beginPath(); ctx.arc(cur.cx, cur.cy, Math.max(cur.r, 16) / 1.0 + 10 / k, 0, 7); ctx.lineWidth = 2.2 / k; ctx.stroke(); }
+  ctx.restore(); ctx.restore();
+}
+
+function ciAt(t) {
+  if (t < S.intro) return -1;
+  const u = t - S.intro, n = S.items.length;
+  for (let i = 0; i < n; i++) if (u < S.st[i] + S.dur[i]) return i;
+  return n;
+}
+function drawHookText(t) { // big 2-line headline, any "#1" token is yellow; lines split by \n or |
+  const { cfg, intro } = S, a0 = 1 - seg(t, intro - .45, intro);
+  const raw = typeof cfg.hook === "string" ? cfg.hook : [].concat(cfg.intro || cfg.title || "").join("\n");
+  const lines = String(raw).toUpperCase().split(/\n|\|/), size0 = PORT ? 124 : 88, maxW = W - (PORT ? 90 : 160), step = size0 * 1.1, y0 = PORT ? 250 : 120;
+  ctx.save(); ctx.textBaseline = "middle"; ctx.textAlign = "left"; ctx.lineJoin = "round";
+  lines.forEach((ln, i) => {
+    const a = a0 * eout(seg(t, .04 + i * .2, .36 + i * .2)); if (a <= 0) return;
+    let sz = size0; font(sz, 900); let w = ctx.measureText(ln).width; if (w > maxW) { sz = Math.floor(sz * maxW / w); font(sz, 900); w = ctx.measureText(ln).width; }
+    let x = W / 2 - w / 2; const y = y0 + i * step + 24 * (1 - a);
+    ctx.globalAlpha = a; ctx.lineWidth = Math.max(10, sz * .13); ctx.strokeStyle = "rgba(5,8,18,.95)";
+    ln.split(/(#\d+)/).filter(Boolean).forEach(p => { const pw = ctx.measureText(p).width; ctx.strokeText(p, x, y); ctx.fillStyle = /^#\d+$/.test(p) ? "#FFE600" : "#fff"; ctx.fillText(p, x, y); x += pw; });
+  });
+  ctx.restore();
+}
+function drawHook(t) { // 0-intro: the top 3 towers, #1 hidden as "???" - visible from the very first frame
+  const { cfg, items, intro } = S, PRT = PORT, kind = stackKind(cfg);
+  const top = items.filter(x => x.rank <= 3).sort((a, b) => a.rank - b.rank);
+  if (!top.length) return;
+  const baseY = H * (PRT ? .77 : .76), maxH = (baseY - (PRT ? 430 : 250)) * .8, gmax = Math.max(...top.map(x => mscale(x.value, cfg)));
+  const grow = .4 + .6 * eout(clamp(t / 1.2)), push = 1 + .05 * clamp(t / Math.max(.5, intro));
+  const bw = PRT ? Math.min(300, W * .27) : Math.min(250, W * .17);
+  const order = top.length >= 3 ? [top[1], top[0], top[2]] : top.length === 2 ? [top[1], top[0]] : [top[0]];
+  const xs = order.length === 3 ? [.26, .5, .74] : order.length === 2 ? [.36, .64] : [.5];
+  ctx.save(); ctx.translate(W / 2, H * .62); ctx.scale(push, push); ctx.translate(-W / 2, -H * .62);
+  order.forEach((it, k) => {
+    const my = it.rank === 1, rel = mscale(it.value, cfg) / gmax, h = Math.max(30, rel * maxH * grow * (my ? 1.08 : 1)), wv = bw * clamp(Math.pow(rel, .22), .6, 1.05), cxm = W * xs[k];
+    if (my) { // golden beam + rising sparkles around the mystery tower
+      const bwid = wv * 2.1, bg2 = ctx.createLinearGradient(0, baseY, 0, baseY - h - 160); bg2.addColorStop(0, "rgba(255,210,63,.30)"); bg2.addColorStop(1, "rgba(255,210,63,0)");
+      ctx.save(); ctx.fillStyle = bg2; ctx.fillRect(cxm - bwid / 2 + wv * .17, baseY - h - 160, bwid, h + 160);
+      for (let j = 0; j < 46; j++) { const ph = (t * .5 + (j * .137) % 1) % 1, px = cxm + wv * .17 + Math.sin(j * 7.3 + t * 1.7) * wv * (.55 + (j % 5) * .1), py = baseY - ph * (h + 170), r = 1.6 + (j % 3) * 1.1;
+        ctx.globalAlpha = Math.sin(Math.PI * ph) * .95; ctx.fillStyle = j % 4 ? "#FFD23F" : "#FFF4B0"; ctx.beginPath(); ctx.arc(px, py, r, 0, 7); ctx.fill(); }
+      ctx.restore();
+    }
+    ctx.save(); if (my) { ctx.shadowColor = "#FFD23F"; ctx.shadowBlur = 36 + 14 * Math.sin(t * 7); }
+    drawTower({ cx: cxm, w: wv, h, floor: baseY }, it, { kind, cfg, cur: my, grow: 1, val: it.value, t, label: my ? "#1  ???" : "#" + it.rank + " " + it.name, card: true, badge: null, shift: 0, mystery: my });
+    ctx.restore();
+  });
+  ctx.restore();
+}
+
+function drawStackFrame(t, mode) {
+  if (!texReady) { buildTextures(); texReady = true; }
+  const { cfg, items, intro, per } = S, n = items.length, kind = stackKind(cfg), PRT = PORT;
+  const ci = ciAt(t), inOut = ci >= n, live = ci >= 0 && !inOut;
+  const tau0 = live ? t - intro - S.st[ci] : 0, ps = live ? S.pause[ci] : 0, tau = Math.max(0, tau0 - ps), inPause = live && tau0 < ps;
+  const pc = live ? S.dur[ci] - ps : per, to = inOut ? t - (intro + S.itemsT) : 0, quick = S.outMode !== "full", TL = quick ? 1 : 1.4;
+  ctx.save(); ctx.globalAlpha = 1; ctx.shadowBlur = 0; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  // backdrop + perspective floor
+  const hz = H * (PRT ? .48 : .44), baseY = H * (PRT ? .77 : .76);
+  let g = ctx.createLinearGradient(0, 0, 0, hz); g.addColorStop(0, "#020409"); g.addColorStop(1, "#090f1d"); ctx.fillStyle = g; ctx.fillRect(0, 0, W, hz);
+  g = ctx.createLinearGradient(0, hz, 0, H); g.addColorStop(0, "#090f1d"); g.addColorStop(.5, "#0d1526"); g.addColorStop(1, "#05070e"); ctx.fillStyle = g; ctx.fillRect(0, hz, W, H - hz);
+  ctx.strokeStyle = "rgba(56,189,248,.12)"; ctx.lineWidth = 1;
+  for (let i = -8; i <= 24; i++) { ctx.beginPath(); ctx.moveTo(W * .15 + i * W * .04, hz); ctx.lineTo(i * W * .12, H); ctx.stroke(); }
+  for (let r = 0; r <= 8; r++) { const ry = hz + Math.pow(r / 8, 1.55) * (H - hz); ctx.beginPath(); ctx.moveTo(0, ry); ctx.lineTo(W, ry); ctx.stroke(); }
+  const topLimit = PRT ? 430 : 250, maxH = baseY - topLimit;
+  ctx.save(); ctx.strokeStyle = "rgba(148,163,184,.14)"; ctx.setLineDash([6, 6]);
+  [.25, .5, .75, 1].forEach(f => { const ly = baseY - maxH * f; ctx.beginPath(); ctx.moveTo(24, ly); ctx.lineTo(W - 24, ly); ctx.stroke(); }); ctx.restore();
+
+  const cc = Math.min(Math.max(ci, 0), n - 1), active = items[cc];
+  if (live && active.rank === 1 && !inPause) { // golden glow + flash when #1 is revealed
+    const ge = eout(clamp(tau / .7)), gx = W * (PRT ? .56 : .62), gy = baseY - maxH * .45, gr = Math.max(W, H) * .75, gg = ctx.createRadialGradient(gx, gy, 0, gx, gy, gr);
+    gg.addColorStop(0, "rgba(255,200,40," + (.34 * ge) + ")"); gg.addColorStop(.5, "rgba(255,170,30," + (.12 * ge) + ")"); gg.addColorStop(1, "rgba(255,170,30,0)");
+    ctx.save(); ctx.fillStyle = gg; ctx.fillRect(0, 0, W, H); ctx.restore();
+  }
+  if (ci >= 0) {
+    const G = Math.max(pc * .7, pc - .7), camT = Math.min(.45 * pc, 1.2);
+    const grow = inOut ? 1 : eout(clamp(tau / G)), cam = inOut ? 1 : easeIO(tau0 / camT);
+    const baseW = PRT ? Math.min(195, W * .28) : Math.min(235, W * .165), stepX = baseW * 1.42, anchorX = W * (PRT ? .56 : .62);
+    const aS = mscale(active.value, cfg), pS = cc > 0 ? mscale(items[cc - 1].value, cfg) : aS * .4;
+    let curMax = Math.max(pS + (aS - pS) * cam, aS * Math.max(.25, grow));
+    for (let i = 0; i < cc; i++) curMax = Math.max(curMax, mscale(items[i].value, cfg));
+    const gmax = Math.max(...items.map(x => mscale(x.value, cfg))), focus = Math.max(0, (cc - 1) + cam);
+    const T = inOut ? eout(seg(to, 0, TL)) : 0, slot = (W - 150) / n, wRow = Math.min(baseW, slot * .7);
+    const hl = new Set(S.hl), rowMode = inOut && n > 10;
+    for (let i = 0; i <= cc; i++) {
+      const it = items[i], cur = i === cc && !inOut, ig = (i === cc && !inOut) ? grow : 1, val = it.value * ig;
+      const rel = Math.max(.015, mscale(val, cfg) / curMax), off = i - focus;
+      let gm = { cx: anchorX + off * stepX, w: baseW * clamp(Math.pow(rel, .22), .36, 1.08), h: Math.max(8, rel * maxH), floor: baseY + off * 8 };
+      if (inOut) { const r2 = mscale(it.value, cfg) / gmax; gm = { cx: lerp2(gm.cx, 75 + slot * (i + .5), T), w: lerp2(gm.w, wRow, T), h: lerp2(gm.h, Math.max(8, r2 * maxH), T), floor: lerp2(gm.floor, baseY, T) }; }
+      if (gm.cx + gm.w * 2 < -100 || gm.cx - gm.w > W + 100) continue;
+      if (cur && inPause) continue;
+      let label = null, card = true, badge = null, shift = 0;
+      if (inOut) { const top3 = it.rank <= (rowMode ? 2 : 3); label = (T > .6 && (top3 || n <= 10)) ? "#" + it.rank + " " + it.name : null; if (rowMode && it.rank === 2) shift = -(gm.w * 1.1 + 70); card = T < .5 ? true : n <= 10; if (T > .6 && rowMode && top3) label += "  " + short(it.value); }
+      else label = cur ? "#" + it.rank + " " + it.name : null;
+      if (cur && i > 0 && grow > .5) { const pv = items[i - 1]; if (pv.value > 0 && it.value > pv.value * 1.15) badge = (it.value / pv.value).toFixed(1).replace(/\.0$/, "") + "x " + pv.name; }
+      if (inOut && hl.has(it.m)) { ctx.save(); ctx.shadowColor = "#fff"; ctx.shadowBlur = 24; }
+      drawTower(gm, it, { kind, cfg, cur: cur || (inOut && hl.has(it.m)), grow: ig, val, t, label, card, badge, shift });
+      if (inOut && hl.has(it.m)) ctx.restore();
+    }
+    // header counter
+    const liveVal = active.value * grow, cx0 = PRT ? 34 : 46, maxW = mode === "split" ? W * (PRT ? .55 : .6) : W - 90;
+    ctx.save(); ctx.textAlign = "left"; ctx.shadowColor = "rgba(255,255,255,.35)"; ctx.shadowBlur = 18; ctx.fillStyle = "#fff";
+    fit(full(liveVal), PRT ? 52 : 64, 900, maxW); ctx.fillText(full(liveVal), cx0, PRT ? 108 : 112);
+    ctx.shadowBlur = 10; ctx.fillStyle = "#e2e8f0"; const sub2 = cfg.compact === false ? (cfg.unit || "") : (short(liveVal) + (cfg.unit ? " " + cfg.unit : ""));
+    fit("( " + sub2 + " )", PRT ? 28 : 34, 800, maxW); ctx.fillText("( " + sub2 + " )", cx0 + 6, PRT ? 152 : 160); ctx.restore();
+  }
+  if (ci < 0 && cfg.hook !== false) drawHook(t);
+  // title and source
+  ctx.fillStyle = "#fbbf24"; fit(String(cfg.title || "").toUpperCase(), PRT ? 20 : 21, 800, mode === "split" ? W * (PRT ? .55 : .6) : W - 90); ctx.textAlign = "left"; ctx.fillText(String(cfg.title || "").toUpperCase(), PRT ? 34 : 46, 36);
+  if (cfg.source) { ctx.fillStyle = "rgba(148,163,184,.75)"; fit(cfg.source, PRT ? 17 : 15, 500, W - 60); ctx.textAlign = "left"; ctx.fillText(cfg.source, 28, H - 20); }
+  // mini map
+  if (mode === "split" && ci >= 0) { const pw = PRT ? W * .34 : Math.min(340, W * .19); drawPip(W - pw - 30, 34, pw, ci, to, 1 - seg(to, 0, .6)); }
+  // outro card
+  if (inOut && quick && S.outMode === "quick" && to > TL) {
+    const q = String(cfg.question || (cfg.outro && cfg.outro.cta && cfg.outro.cta.length < 60 ? cfg.outro.cta : "Did you guess #1? Tell us below"));
+    const a = eout(seg(to, TL, TL + .3)), qy = PRT ? H * .92 : H * .93;
+    ctx.save(); ctx.globalAlpha = a; ctx.textAlign = "center"; ctx.textBaseline = "middle"; fit(q, PRT ? 46 : 44, 900, W - 120);
+    const tw = ctx.measureText(q).width, ph = PRT ? 92 : 80;
+    ctx.fillStyle = "rgba(8,12,24,.88)"; ctx.strokeStyle = "#FFD23F"; ctx.lineWidth = 3; ctx.beginPath(); ctx.roundRect(W / 2 - tw / 2 - 36, qy - ph / 2, tw + 72, ph, ph / 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#fff"; ctx.fillText(q, W / 2, qy + 2); ctx.restore();
+  }
+  if (inOut && !quick && cfg.outro && to > .6) {
+    const o = cfg.outro, a = eout(seg(to, .6, 1.4)), cw = PRT ? W * .58 : 620, chh = PRT ? 360 : 330, x = PRT ? 34 : 46, y = PRT ? 200 : 205;
+    ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = "rgba(8,12,24,.84)"; ctx.strokeStyle = "rgba(255,255,255,.16)"; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.roundRect(x, y, cw, chh, 22); ctx.fill(); ctx.stroke(); ctx.textBaseline = "alphabetic";
+    let yy = wrap(o.big || "", x + 28, y + 70, PRT ? 46 : 54, 800, cw - 56, PRT ? 56 : 64, "#fff");
+    yy = wrap(o.text || "", x + 28, yy + 6, PRT ? 26 : 29, 600, cw - 56, PRT ? 36 : 40, "#fff");
+    if (o.cta) wrap(o.cta, x + 28, Math.max(yy + 14, y + chh - 62), PRT ? 23 : 25, 600, cw - 56, 33, "rgba(255,255,255,.75)");
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+function say(el, text, bad) { el.textContent = text; el.className = "msg" + (bad ? " err" : ""); }
+
+async function loadMap() {
+  for (const u of MAPS) {
+    try { const r = await fetch(u); if (!r.ok) continue; GJ = await r.json(); setup(GJ); return; } catch (e) {}
+  }
+  throw new Error("Không tải được dữ liệu bản đồ. Kiểm tra mạng rồi tải lại trang.");
+}
+function setup(g) {
+  C = []; BY = {}; BYN = {};
+  const proj = d3.geoNaturalEarth1().fitExtent(L.map, { type: "Sphere" }), path = d3.geoPath(proj);
+  P = { sphere: new Path2D(path({ type: "Sphere" })), grat: new Path2D(path(d3.geoGraticule().step([30, 30])())) };
+  g.features.forEach(f => {
+    const p = f.properties; if (p.NAME === "Antarctica") return;
+    let main = f.geometry;
+    if (main.type === "MultiPolygon") { let best = 0; f.geometry.coordinates.forEach(co => { const poly = { type: "Polygon", coordinates: co }, a = path.area(poly); if (a > best) { best = a; main = poly; } }); }
+    const [cx, cy] = path.centroid(main), code = p.ISO_A2_EH && p.ISO_A2_EH !== "-99" ? p.ISO_A2_EH : p.ISO_A2;
+    const c = { code, name: p.NAME, p2: new Path2D(path(f)), cx, cy, r: Math.sqrt(path.area(main) / Math.PI), col: CONT[p.CONTINENT] || "#3A4668" };
+    if (code === "VN") { // Hoàng Sa + Trường Sa: two small dots (110m map drops them)
+      c.isl = new Path2D();
+      [[112.0, 16.5, 5], [114.0, 10.0, 6]].forEach(([lo, la, r]) => { const q = proj([lo, la]); if (q) { const R = Math.max(3.5, r * L.ms), d = new Path2D(); d.arc(q[0], q[1], R, 0, 7); c.p2.addPath(d); c.isl.addPath(d); } });
+    }
+    C.push(c); if (code && code !== "-99") BY[code] = c; BY[p.ADM0_A3] = c; BYN[String(p.NAME).toLowerCase()] = c;
+  });
+}
+function loadFlag(code) {
+  if (flags[code] || !/^[A-Z]{2}$/.test(code)) return;
+  const lc = code.toLowerCase(), srcs = ["https://flagcdn.com/w320/" + lc + ".png", "https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.2.3/flags/4x3/" + lc + ".svg"];
+  const im = new Image(); im.crossOrigin = "anonymous"; flags[code] = { im, ok: false }; let k = 0;
+  im.onload = () => { flags[code].ok = true; flags[code].ar = (im.naturalHeight / im.naturalWidth) || .75; };
+  im.onerror = () => { if (++k < srcs.length) im.src = srcs[k]; };
+  im.src = srcs[0];
+}
+function build(cfg) {
+  if (!cfg || !Array.isArray(cfg.countries) || !cfg.countries.length) throw new Error('Code thiếu danh sách "countries".');
+  const bad = [];
+  let items = cfg.countries.map(c => {
+    const k = String(c.code || "").toUpperCase(), m = BY[k] || BYN[String(c.name || c.code || "").toLowerCase()];
+    if (!m) bad.push(c.code || c.name || "?");
+    return { m, code: /^[A-Z]{2}$/.test(k) ? k : (m && m.code), name: c.name || (m && m.name), value: +c.value || 0 };
+  }).filter(x => x.m);
+  if (!items.length) throw new Error("Không nhận ra mã nước nào. Dùng mã 2 chữ cái như VN, US, JP.");
+  const sorted = [...items].sort((a, b) => b.value - a.value); sorted.forEach((x, i) => x.rank = i + 1);
+  const order = cfg.order || "countdown";
+  if (order === "countdown") items = sorted.slice().reverse(); else if (order === "top") items = sorted;
+  if (/^(gen|fast|off)$/.test(cfg.music || "") && $("music").value !== "file") $("music").value = cfg.music;
+  const intro = cfg.introSeconds ?? 3, per = cfg.secondsPerCountry ?? 2.4;
+  const outMode = /^(quick|loop|full)$/.test(cfg.outroMode || "") ? cfg.outroMode : (PORT || !cfg.outro ? "quick" : "full");
+  const out = outMode === "loop" ? 1.2 : outMode === "quick" ? (cfg.outroSeconds ?? 2.6) : (cfg.outro ? (cfg.outroSeconds ?? 5.5) : 1.5);
+  const sus = (curMode() !== "map" || curMode(cfg) === "ball") && order === "countdown" && items.length >= 3 ? (cfg.suspense ?? (PORT ? .9 : 1.1)) : 0;
+  const mult = r => cfg.pace === "even" ? 1 : items.length <= 12 ? (r > 3 ? .75 : r > 1 ? 1.05 : 1.1) : (r > 20 ? .7 : r > 10 ? .85 : r > 3 ? 1 : r > 1 ? 1.15 : 1.25);
+  const dur = items.map((x, i) => per * mult(x.rank) + (i === items.length - 1 ? sus : 0)), pause = items.map((x, i) => i === items.length - 1 ? sus : 0);
+  const st = []; let acc = 0; dur.forEach(d => { st.push(acc); acc += d; }); const itemsT = acc;
+  items.forEach(x => loadFlag(x.code));
+  const end = cfg.endCard && outMode !== "loop" ? (cfg.endCard.seconds ?? (outMode === "quick" ? 3.5 : 8)) : 0, ek = Math.max(1, 5 / (end || 5));
+  S = { cfg, items, order, intro, per, out, end, ek, outMode, dur, pause, st, itemsT, e0: intro + itemsT + out, total: intro + itemsT + out + end, accent: cfg.color || "#F5A524", bad,
+        hl: ((cfg.outro && cfg.outro.highlight) || []).map(k => BY[String(k).toUpperCase()]).filter(Boolean) };
+  base = document.createElement("canvas"); base.width = W; base.height = H;
+  const b = base.getContext("2d"); bg(b);
+  b.fillStyle = "rgba(255,255,255,.025)"; b.fill(P.sphere); b.strokeStyle = "rgba(255,255,255,.16)"; b.lineWidth = 1.5; b.stroke(P.sphere);
+  b.strokeStyle = "rgba(255,255,255,.07)"; b.lineWidth = 1; b.stroke(P.grat);
+  C.forEach(c => { b.fillStyle = c.col; b.fill(c.p2, "evenodd"); b.strokeStyle = "rgba(10,15,35,.85)"; b.lineWidth = 1; b.stroke(c.p2); });
+  S.dark = new Path2D(); C.forEach(c => S.dark.addPath(c.p2));
+}
+function bg(c) {
+  const g = c.createRadialGradient(W * .62, H * .48, 0, W * .62, H * .48, W * .75);
+  g.addColorStop(0, "#172554"); g.addColorStop(1, "#070B18"); c.fillStyle = g; c.fillRect(0, 0, W, H);
+}
+function font(size, weight) { ctx.font = (weight || 700) + " " + size + "px " + FONT; }
+function fit(text, size, weight, maxW) { font(size, weight); const w = ctx.measureText(text).width; if (w > maxW) font(Math.floor(size * maxW / w), weight); }
+function wrap(text, x, y, size, weight, maxW, lh, color) {
+  font(size, weight); ctx.fillStyle = color; let line = "", yy = y;
+  String(text).split(" ").forEach(w => { const test = line ? line + " " + w : w; if (ctx.measureText(test).width > maxW && line) { ctx.fillText(line, x, yy); line = w; yy += lh; } else line = test; });
+  if (line) ctx.fillText(line, x, yy); return yy + lh;
+}
+function num(v, d) { return Number(v).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }); }
+function full(v) { const c = S.cfg, d = +c.decimals || 0; return (c.prefix || "") + num(d ? v : Math.round(v), d) + (c.suffix || ""); }
+function short(v) {
+  const c = S.cfg, a = Math.abs(v);
+  if (c.compact === false || (+c.decimals && a < 1e4)) return full(v);
+  const s = a >= 1e12 ? (v / 1e12).toFixed(2) + "T" : a >= 1e9 ? (v / 1e9).toFixed(2) + "B" : a >= 1e6 ? (v / 1e6).toFixed(a < 1e7 ? 2 : a < 1e8 ? 1 : 0) + "M" : a >= 1e4 ? Math.round(v / 1e3).toLocaleString("en-US") + "K" : Math.round(v).toLocaleString("en-US");
+  return (c.prefix || "") + s + (c.suffix || "");
+}
+function drawFlag(code, x, y, w) { // x,y = left, vertical centre
+  const f = flags[code];
+  if (f && f.ok) { const h = w * f.ar; ctx.drawImage(f.im, x, y - h / 2, w, h); ctx.strokeStyle = "rgba(255,255,255,.35)"; ctx.lineWidth = 1; ctx.strokeRect(x, y - h / 2, w, h); return; }
+  if (!code) return;
+  ctx.font = Math.round(w * .82) + "px " + FONT; ctx.textAlign = "left";
+  ctx.fillText(String.fromCodePoint(...[...code].map(ch => 0x1F1E6 + ch.charCodeAt(0) - 65)), x, y + w * .28);
+}
+
+function overlays(t) {
+  const { cfg, intro, total } = S;
+  // intro card
+  if (t < intro && curMode() !== "map" && cfg.hook !== false) {
+    drawHookText(t);
+  } else if (t < intro) {
+    ctx.globalAlpha = 1 - seg(t, intro - .6, intro); bg(ctx); ctx.textAlign = "center";
+    const lines = [].concat(cfg.intro || cfg.title || ""), y0 = H / 2 - (lines.length - 1) * 56;
+    lines.forEach((l, i) => { const a = eout(seg(t, .15 + i * .4, .9 + i * .4)), ga = ctx.globalAlpha; ctx.globalAlpha = ga * a; ctx.fillStyle = "#fff"; fit(l, PORT ? 80 : 86, 800, W - 160); ctx.fillText(l, W / 2, y0 + i * 112 + 30 * (1 - a)); ctx.globalAlpha = ga; });
+    ctx.textAlign = "left"; ctx.globalAlpha = 1;
+  }
+  if (S.end && t >= S.e0) drawEnd((t - S.e0) * S.ek);
+  const f = S.outMode === "loop" ? 0 : seg(t, total - .5, total); if (f > 0) { ctx.globalAlpha = f; ctx.fillStyle = "#05070F"; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1; }
+}
+function draw(t) {
+  { const md = curMode(); if (md === "ball") { drawBallFrame(t); overlays(t); return; } if (md !== "map") { drawStackFrame(t, md); overlays(t); return; } }
+  const { cfg, items, intro, per, total, accent } = S, n = items.length;
+  ctx.globalAlpha = 1; ctx.shadowBlur = 0; ctx.textAlign = "left"; ctx.drawImage(base, 0, 0);
+  const ci = ciAt(t), inOut = ci >= n;
+  const tau = ci >= 0 && !inOut ? Math.max(0, t - intro - S.st[ci] - S.pause[ci]) : 0, to = inOut ? t - (intro + S.itemsT) : 0;
+  const pcm = ci >= 0 && !inOut ? S.dur[ci] - S.pause[ci] : per;
+  // map never moves: dim everything, bring the current country back to full colour
+  const dim = ci < 0 ? 0 : inOut ? .55 : .55 * eout(seg(t, intro, intro + .5));
+  if (dim > 0) { ctx.globalAlpha = dim; ctx.fillStyle = "#070B18"; ctx.fill(S.dark, "evenodd"); ctx.globalAlpha = 1; }
+  const glow = (m, p, ph) => {
+    ctx.save(); ctx.globalAlpha = p; ctx.fillStyle = m.col; ctx.fill(m.p2, "evenodd");
+    ctx.shadowColor = "#fff"; ctx.shadowBlur = 26; ctx.strokeStyle = "#fff"; ctx.lineWidth = 3; ctx.stroke(m.p2); ctx.shadowBlur = 0; ctx.stroke(m.p2);
+    ctx.globalAlpha = p * (1 - ph) * .9; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(m.cx, m.cy, Math.max(m.r, 16) + 14 + 70 * ph, 0, 7); ctx.stroke(); ctx.restore();
+  };
+  const mapFlag = (x, w, a, label) => { // flag pinned on the country
+    const f = flags[x.code], h = w * (f && f.ok ? f.ar : .7), X = x.m.cx - w / 2, Y = x.m.cy - h / 2;
+    ctx.save(); ctx.globalAlpha = a; ctx.shadowColor = "rgba(0,0,0,.55)"; ctx.shadowBlur = 10; ctx.shadowOffsetY = 3;
+    if (f && f.ok) { ctx.drawImage(f.im, X, Y, w, h); ctx.shadowColor = "transparent"; ctx.strokeStyle = "#fff"; ctx.lineWidth = Math.max(1.5, w / 30); ctx.strokeRect(X, Y, w, h); }
+    else { ctx.font = Math.round(w * .82) + "px " + FONT; ctx.textAlign = "center"; ctx.fillText(String.fromCodePoint(...[...x.code].map(ch => 0x1F1E6 + ch.charCodeAt(0) - 65)), x.m.cx, x.m.cy + w * .28); }
+    ctx.restore();
+    if (label) { ctx.save(); ctx.globalAlpha = a; fit(x.name, Math.max(18, w * .3), 800, 360); ctx.textAlign = "center"; ctx.lineJoin = "round";
+      ctx.lineWidth = 6; ctx.strokeStyle = "rgba(7,11,24,.9)"; ctx.strokeText(x.name, x.m.cx, Y + h + w * .32 + 6); ctx.fillStyle = "#fff"; ctx.fillText(x.name, x.m.cx, Y + h + w * .32 + 6); ctx.restore(); }
+  };
+  const fw = x => clamp(x.m.r * .7, 40 * L.ms, 84 * L.ms);
+  // countries already counted keep their colour and a small flag
+  items.forEach((x, i) => { if (i < ci) { ctx.globalAlpha = .85; ctx.fillStyle = x.m.col; ctx.fill(x.m.p2, "evenodd"); ctx.globalAlpha = 1; } });
+  if (inOut) S.hl.forEach(m => glow(m, eout(seg(to, .2, .8)), ((to + 1.3) % 1.3) / 1.3));
+  items.forEach((x, i) => { if (i < ci) mapFlag(x, fw(x), 1, x.m.r > 45); });
+  if (ci >= 0 && !inOut) {
+    const x = items[ci], p = eout(seg(tau, 0, .4)); glow(x.m, p, (tau % 1.3) / 1.3);
+    const pop = 1 + .25 * Math.sin(Math.PI * seg(tau, 0, .5)) * (1 - seg(tau, .5, .6));
+    mapFlag(x, clamp(x.m.r * 1.05, 76 * L.ms, 132 * L.ms) * pop, p, true);
+  }
+  // Vietnam's two islands (Hoàng Sa, Trường Sa) stay visible on top of the flag whenever Vietnam is lit
+  { const vn = BY.VN; if (vn && vn.isl) { const lit = (inOut ? S.hl.includes(vn) : false) || items.some((x, i) => x.m === vn && i <= ci);
+    if (lit) { ctx.save(); ctx.fillStyle = vn.col; ctx.fill(vn.isl); ctx.shadowColor = "#fff"; ctx.shadowBlur = 14; ctx.strokeStyle = "#fff"; ctx.lineWidth = 2.5; ctx.stroke(vn.isl); ctx.restore(); } } }
+  // header, source
+  ctx.globalAlpha = 1; const hd = L.head, sr = L.src, q = L.p;
+  ctx.textAlign = hd.align; ctx.fillStyle = "#fff"; fit(cfg.title || "", hd.ts, 800, hd.w); ctx.fillText(cfg.title || "", hd.x, hd.ty);
+  ctx.fillStyle = "rgba(255,255,255,.62)"; fit(cfg.subtitle || "", hd.ss, 500, hd.w); ctx.fillText(cfg.subtitle || "", hd.x, hd.sy);
+  ctx.fillStyle = "rgba(255,255,255,.45)"; ctx.textAlign = sr.align; fit(cfg.source || "", sr.s, 400, sr.w); ctx.fillText(cfg.source || "", sr.x, sr.y); ctx.textAlign = "left";
+  // panel
+  ctx.fillStyle = "rgba(255,255,255,.055)"; ctx.strokeStyle = "rgba(255,255,255,.12)"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.roundRect(q.x, q.y, q.w, q.h, 28); ctx.fill(); ctx.stroke();
+  if (!inOut || !cfg.outro || S.outMode !== "full") {
+    const aC = inOut ? 1 : eout(seg(t, intro - .1, intro + .4)); ctx.globalAlpha = aC;
+    font(q.hs, 700); ctx.fillStyle = "rgba(255,255,255,.55)"; try { ctx.letterSpacing = "5px"; } catch (e) {}
+    ctx.fillText((cfg.panelTitle || "TOP " + n).toUpperCase(), q.tx, q.head); try { ctx.letterSpacing = "0px"; } catch (e) {}
+    const cur = ci >= 0 ? items[Math.min(ci, n - 1)] : null;
+    if (cur) {
+      const pp = inOut ? 1 : eout(seg(tau, 0, .35)); ctx.globalAlpha = aC * pp;
+      font(q.rank[2], 800); ctx.fillStyle = "#fff"; ctx.fillText("#" + cur.rank, q.rank[0] - 30 * (1 - pp), q.rank[1]);
+      drawFlag(cur.code, q.flag[0], q.flag[1], q.flag[2]);
+      ctx.fillStyle = "#fff"; fit(cur.name, q.name[1], 800, q.name[2]); ctx.fillText(cur.name, q.tx, q.name[0]);
+      const v = full(cur.value * (inOut ? 1 : eout(seg(tau, pcm * .06, pcm * .6))));
+      ctx.fillStyle = accent; fit(full(cur.value), q.val[1], 700, q.name[2]); ctx.fillText(v, q.tx, q.val[0]);
+      font(q.unit[1], 500); ctx.fillStyle = "rgba(255,255,255,.55)"; ctx.fillText(cfg.unit || "", q.tx, q.unit[0]);
+    }
+    ctx.globalAlpha = aC; ctx.strokeStyle = "rgba(255,255,255,.14)"; ctx.beginPath(); ctx.moveTo(q.tx, q.line); ctx.lineTo(q.right, q.line); ctx.stroke();
+    const ls = q.ls, fx = q.tx + ls * 1.6, nx = q.tx + ls * 3.6;
+    let shown = items.map((x, i) => ({ x, a: i < ci ? 1 : i === ci ? eout(seg(tau, pcm * .62, pcm * .8)) : 0 })).filter(o => o.a > 0).slice(-q.rows);
+    shown.sort((a, b) => a.x.rank - b.x.rank);
+    shown.forEach((o, k) => {
+      const y = q.ly + (S.order === "countdown" ? q.rows - shown.length + k : k) * q.step; ctx.globalAlpha = aC * o.a * (cur === o.x ? 1 : .8);
+      font(ls, 700); ctx.fillStyle = "rgba(255,255,255,.5)"; ctx.fillText(o.x.rank, q.tx, y);
+      drawFlag(o.x.code, fx, y - ls * .375, ls * 1.5);
+      const sv = short(o.x.value); font(ls, 600); const vw = ctx.measureText(sv).width;
+      ctx.fillStyle = accent; ctx.textAlign = "right"; ctx.fillText(sv, q.right, y); ctx.textAlign = "left";
+      ctx.fillStyle = "#fff"; fit(o.x.name, ls * 1.04, 600, q.right - nx - vw - 14); ctx.fillText(o.x.name, nx, y);
+    });
+  } else {
+    const o = cfg.outro; ctx.globalAlpha = eout(seg(to, .3, 1));
+    let y = wrap(o.big || "", q.tx, q.oy, 66, 800, q.ow, 80, "#fff");
+    y = wrap(o.text || "", q.tx, y + 24, 36, 600, q.ow, 48, "#fff");
+    if (o.cta) wrap(o.cta, q.tx, q.cta, 30, 600, q.ow, 42, "rgba(255,255,255,.75)");
+  }
+  ctx.globalAlpha = 1;
+  overlays(t);
+}
+
+// ---------- end card: like & subscribe ----------
+const lerp = (a, b, k) => a + (b - a) * k;
+function pill(x, y, w, h, fill) { ctx.beginPath(); ctx.roundRect(x, y, w, h, h / 2); ctx.fillStyle = fill; ctx.fill(); }
+function icon(p, x, y, sc, rot) { ctx.save(); ctx.translate(x, y); if (rot) ctx.rotate(rot); ctx.scale(sc, sc); ctx.translate(-12, -12); ctx.fill(p); ctx.restore(); }
+function drawEnd(te) {
+  const e = S.cfg.endCard, a = eout(seg(te, 0, .5)), cx = 960;
+  ctx.save();
+  ctx.globalAlpha = a * .84; ctx.fillStyle = "#05070F"; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = a;
+  if (PORT) ctx.translate(W / 2 - 960, H / 2 - 540);
+  // avatar badge
+  const pa = back(seg(te, .15, .6)), R = 110 * pa;
+  if (R > 1) {
+    const g = ctx.createRadialGradient(cx - 30, 300, 10, cx, 330, R); g.addColorStop(0, "#24408F"); g.addColorStop(1, "#0B1437");
+    ctx.shadowColor = "rgba(91,140,255,.7)"; ctx.shadowBlur = 40; ctx.beginPath(); ctx.arc(cx, 330, R, 0, 7); ctx.fillStyle = g; ctx.fill(); ctx.shadowBlur = 0;
+    ctx.lineWidth = 4; ctx.strokeStyle = "rgba(255,255,255,.7)"; ctx.stroke();
+    [[0, .34, "#8B9BFF"], [1, .55, "#2DD4BF"], [2, .78, "#F5A524"]].forEach(([i, h, c]) => { ctx.fillStyle = c; ctx.beginPath(); ctx.roundRect(cx - R * .5 + i * R * .36, 330 + R * .45 - R * h * 1.1, R * .26, R * h * 1.1, R * .06); ctx.fill(); });
+  }
+  const tn = eout(seg(te, .4, .9)); ctx.globalAlpha = a * tn; ctx.textAlign = "center";
+  ctx.fillStyle = "#fff"; fit(e.channel || "", 64, 800, Math.min(1200, W - 100)); ctx.fillText(e.channel || "", cx, 520 + 20 * (1 - tn));
+  font(32, 500); ctx.fillStyle = "rgba(255,255,255,.62)"; ctx.fillText(e.handle || "", cx, 568 + 20 * (1 - tn));
+  // buttons
+  const tb = eout(seg(te, .6, 1.1)), by = 630 + 30 * (1 - tb), liked = te >= 2.0, subbed = te >= 3.2;
+  ctx.globalAlpha = a * tb;
+  const lp = liked ? 1 + .12 * Math.sin(Math.PI * seg(te, 2.0, 2.3)) : 1, sp = subbed ? 1 + .1 * Math.sin(Math.PI * seg(te, 3.2, 3.5)) : 1;
+  ctx.save(); ctx.translate(750, by + 48); ctx.scale(lp, lp); ctx.translate(-750, -by - 48);
+  pill(600, by, 300, 96, liked ? "#3EA6FF" : "rgba(255,255,255,.14)");
+  ctx.fillStyle = liked ? "#0B1020" : "#fff"; icon(ICON.like, 668, by + 47, 2.3 * (liked ? 1 + .3 * Math.sin(Math.PI * seg(te, 2.0, 2.35)) : 1), liked ? -.25 * Math.sin(Math.PI * seg(te, 2.0, 2.4)) : 0);
+  font(40, 700); ctx.textAlign = "left"; ctx.fillText(liked ? "Liked" : "Like", 724, by + 62); ctx.restore();
+  ctx.save(); ctx.translate(1130, by + 48); ctx.scale(sp, sp); ctx.translate(-1130, -by - 48);
+  pill(940, by, 380, 96, subbed ? "#3A3A3A" : "#FF0033");
+  ctx.fillStyle = subbed ? "#cfcfcf" : "#fff"; font(subbed ? 36 : 40, 800); ctx.textAlign = "center"; ctx.fillText(subbed ? "SUBSCRIBED" : "SUBSCRIBE", 1130, by + 62); ctx.restore();
+  // bell
+  const tbl = back(seg(te, 3.4, 3.8));
+  if (tbl > 0) { const shake = Math.sin(te * 32) * .45 * (1 - seg(te, 3.6, 4.8)); ctx.fillStyle = "#fff"; ctx.globalAlpha = a; icon(ICON.bell, 1385, by + 48, 2.6 * tbl, shake * seg(te, 3.6, 3.7)); }
+  // message
+  const tm = eout(seg(te, 4.2, 4.8)); ctx.globalAlpha = a * tm; ctx.textAlign = "center";
+  if (e.text) { ctx.fillStyle = "rgba(255,255,255,.85)"; fit(e.text, 40, 600, Math.min(1400, W - 100)); ctx.fillText(e.text, cx, 840 + 16 * (1 - tm)); }
+  // click ripples
+  [[2.0, 750], [3.2, 1130]].forEach(([tc, x]) => { const k = seg(te, tc, tc + .55); if (k > 0 && k < 1) { ctx.globalAlpha = a * (1 - k) * .8; ctx.strokeStyle = "#fff"; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(x, by + 48, 20 + 70 * k, 0, 7); ctx.stroke(); } });
+  // cursor
+  const P0 = [1560, 1010], PL = [762, 700], PS = [1142, 700], PX = [1500, 930];
+  let cp = P0;
+  if (te < 1.9) cp = [lerp(P0[0], PL[0], eout(seg(te, 1.0, 1.9))), lerp(P0[1], PL[1], eout(seg(te, 1.0, 1.9)))];
+  else if (te < 3.1) cp = [lerp(PL[0], PS[0], eout(seg(te, 2.4, 3.1))), lerp(PL[1], PS[1], eout(seg(te, 2.4, 3.1)))];
+  else cp = [lerp(PS[0], PX[0], eout(seg(te, 3.7, 4.4))), lerp(PS[1], PX[1], eout(seg(te, 3.7, 4.4)))];
+  const press = (te > 1.95 && te < 2.12) || (te > 3.15 && te < 3.32) ? .82 : 1, ca = seg(te, .9, 1.1) * (1 - seg(te, 4.5, 5));
+  if (ca > 0) { ctx.globalAlpha = a * ca; ctx.save(); ctx.translate(cp[0], cp[1]); ctx.scale(1.6 * press, 1.6 * press);
+    ctx.shadowColor = "rgba(0,0,0,.6)"; ctx.shadowBlur = 8; ctx.fillStyle = "#fff"; ctx.fill(ICON.cursor); ctx.shadowBlur = 0; ctx.lineWidth = 1.6; ctx.strokeStyle = "#111"; ctx.stroke(ICON.cursor); ctx.restore(); }
+  ctx.restore(); ctx.textAlign = "left"; ctx.globalAlpha = 1;
+}
+
+// ---------- music ----------
+const ac = () => { if (!AC) { AC = new (window.AudioContext || window.webkitAudioContext)(); AC.onstatechange = () => { if (AC.state === "running" && playing && track) startAudio(); }; } return AC; };
+const hz = m => 440 * Math.pow(2, (m - 69) / 12);
+function synth(oc, out, D, loopMode, fast) {
+  const BEAT = fast ? .36 : .6, BAR = 4 * BEAT, CH = [[45,57,60,64,67],[41,53,57,60,64],[48,55,60,64,67],[43,55,59,62,66]], ARP = [1,2,3,4,3,2,3,4];
+  const rev = oc.createConvolver(), len = Math.floor(oc.sampleRate * 1.1), ir = oc.createBuffer(2, len, oc.sampleRate);
+  for (let c = 0; c < 2; c++) { const d = ir.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / oc.sampleRate * 5.5); }
+  rev.buffer = ir; const wet = oc.createGain(); wet.gain.value = .25; rev.connect(wet).connect(out);
+  const bus = oc.createGain(); bus.connect(out); bus.connect(rev);
+  const tone = (type, f, t0, dur, g, a, decay) => {
+    const o = oc.createOscillator(), e = oc.createGain(); o.type = type; o.frequency.value = f;
+    e.gain.setValueAtTime(0, t0); e.gain.linearRampToValueAtTime(g, t0 + a);
+    if (decay) e.gain.exponentialRampToValueAtTime(.0001, t0 + dur); else { e.gain.setValueAtTime(g, t0 + dur); e.gain.linearRampToValueAtTime(0, t0 + dur + 1.2); }
+    o.connect(e).connect(bus); o.start(t0); o.stop(t0 + dur + 1.3);
+  };
+  for (let bar = 0, t0 = .2; t0 < D; bar++, t0 += BAR) {
+    const c = CH[bar % 4];
+    c.forEach((m, k) => { tone("sine", hz(m) * .997, t0, BAR, k ? .028 : .045, .7); tone("sine", hz(m) * 1.003, t0, BAR, k ? .028 : .045, .7); tone("triangle", hz(m) * 2, t0, BAR, .006, .7); });
+    if (fast) for (let b = 0; b < 8; b++) { const k0 = t0 + b * BEAT / 2 + BEAT / 4, o = oc.createOscillator(), e = oc.createGain(); o.type = "square"; o.frequency.value = 7600 + (b % 3) * 300; e.gain.setValueAtTime(.016, k0); e.gain.exponentialRampToValueAtTime(.0001, k0 + .04); o.connect(e).connect(out); o.start(k0); o.stop(k0 + .05); }
+    (fast ? [0, 1, 2, 3] : [0, 2]).forEach(b => { const o = oc.createOscillator(), e = oc.createGain(), k0 = t0 + b * BEAT;
+      o.frequency.setValueAtTime(115, k0); o.frequency.exponentialRampToValueAtTime(45, k0 + .3);
+      e.gain.setValueAtTime(.32, k0); e.gain.exponentialRampToValueAtTime(.0001, k0 + .35); o.connect(e).connect(out); o.start(k0); o.stop(k0 + .4); });
+    if (bar >= 1 || loopMode) for (let i = 0; i < 8; i++) tone("triangle", hz(c[ARP[i]] + 12), t0 + i * BEAT / 2, .9, .05, .004, true);
+  }
+}
+function chime(oc, out, t0, semi) {
+  [[81, .16], [69, .1]].forEach(([m, g]) => [[1, 1, 2.6], [2.01, .45, 4.6], [3.02, .2, 6.6]].forEach(([mul, a, d]) => {
+    const o = oc.createOscillator(), e = oc.createGain(); o.frequency.value = hz(m + semi) * mul;
+    e.gain.setValueAtTime(0, t0); e.gain.linearRampToValueAtTime(g * a, t0 + .004); e.gain.exponentialRampToValueAtTime(.0001, t0 + 2.2 * 2.6 / d);
+    o.connect(e).connect(out); o.start(t0); o.stop(t0 + 2.5); }));
+}
+async function makeLoop(fast) {
+  const BAR = fast ? 1.44 : 2.4, L = 8 * BAR, sr = 44100, oc = new OfflineAudioContext(2, Math.ceil((L + 2.5) * sr), sr), out = oc.createGain();
+  out.connect(oc.destination); synth(oc, out, L, true, fast);
+  const r = await oc.startRendering(), n = Math.round(L * sr), buf = new OfflineAudioContext(2, 1, sr).createBuffer(2, n, sr);
+  for (let c = 0; c < 2; c++) { const s = r.getChannelData(c), d = buf.getChannelData(c); for (let i = 0; i < s.length; i++) d[i % n] += s[i]; }
+  return buf;
+}
+async function renderTrack() {
+  const id = ++renderId, mode = $("music").value; track = null; stopAudio();
+  if (!S || mode === "off" || !window.OfflineAudioContext) { say($("amsg"), mode === "off" ? "" : "Trình duyệt không hỗ trợ âm thanh."); return; }
+  if (mode === "file" && !userBuf) { say($("amsg"), "Chọn một file nhạc (mp3, wav…)."); return; }
+  say($("amsg"), "Đang tạo nhạc…");
+  let loopBuf = null;
+  if (mode !== "file") { loopBuf = await makeLoop(mode === "fast"); if (id !== renderId) return; }
+  const D = S.total, sr = 44100, oc = new OfflineAudioContext(2, Math.ceil(D * sr), sr), out = oc.createGain();
+  const lp = S.outMode === "loop"; out.gain.setValueAtTime(lp ? 1 : 0, 0); if (!lp) { out.gain.linearRampToValueAtTime(1, 1); out.gain.setValueAtTime(1, Math.max(1, D - 1.5)); out.gain.linearRampToValueAtTime(0, D); } out.connect(oc.destination);
+  if (mode === "file") { const b = oc.createBufferSource(); b.buffer = userBuf; b.loop = true; const g = oc.createGain(); g.gain.value = .85; b.connect(g).connect(out); b.start(0); }
+  else { const b = oc.createBufferSource(); b.buffer = loopBuf; b.loop = true; b.connect(out); b.start(0); }
+  const pent = [-12, -10, -8, -5, -3, 0, 2, 4, 7, 9, 12, 14, 16, 19, 21];
+  if (curMode() === "ball") { // cartoon sounds: boing for each ball, heavy thud for top 3 / #1, victory chime for #1
+    const sfx = CountryballEngine.scheduleCartoonSfxOffline;
+    if (S.cfg.hook !== false) sfx(oc, out, .28, "gasp_drop", .4);
+    S.items.forEach((x, i) => { const t0 = S.intro + S.st[i], p = S.pause[i], tr = t0 + p;
+      if (p > .2) { sfx(oc, out, t0 + .25, "gasp_drop", .4); sfx(oc, out, tr + .02, "victory_chime", .3); sfx(oc, out, tr + .04, "pop", .4); }
+      else if (x.rank <= 3) { sfx(oc, out, tr + .25, "gasp_drop", x.rank === 1 ? .45 : .35); if (x.rank === 1) sfx(oc, out, tr + .3, "victory_chime", .3); }
+      else sfx(oc, out, tr + .25, "boing", .3); });
+  } else
+  S.items.forEach((x, i) => chime(oc, out, S.intro + S.st[i] + S.pause[i] + .02, pent[Math.round(i * (pent.length - 1) / Math.max(1, S.items.length - 1))] ?? 0));
+  S.items.forEach((x, i) => { const p = S.pause[i]; if (p > .2) { const t0 = S.intro + S.st[i], o = oc.createOscillator(), e = oc.createGain(); o.type = "sawtooth"; o.frequency.setValueAtTime(180, t0); o.frequency.exponentialRampToValueAtTime(1500, t0 + p);
+    e.gain.setValueAtTime(.0001, t0); e.gain.exponentialRampToValueAtTime(.06, t0 + p * .95); e.gain.linearRampToValueAtTime(0, t0 + p); o.connect(e).connect(out); o.start(t0); o.stop(t0 + p + .05); } });
+  S.items.forEach((x, i) => { if (x.rank === 1 && S.pause[i] > .2) { const tr = S.intro + S.st[i] + S.pause[i], bo = oc.createOscillator(), be = oc.createGain(); bo.type = "sine"; bo.frequency.setValueAtTime(95, tr); bo.frequency.exponentialRampToValueAtTime(38, tr + .5);
+    be.gain.setValueAtTime(.0001, tr); be.gain.exponentialRampToValueAtTime(.55, tr + .01); be.gain.exponentialRampToValueAtTime(.0001, tr + 1.1); bo.connect(be).connect(out); bo.start(tr); bo.stop(tr + 1.2);
+    [72, 76, 79, 84].forEach((m, k) => { const o = oc.createOscillator(), e = oc.createGain(), t1 = tr + k * .035; o.type = "triangle"; o.frequency.value = hz(m); e.gain.setValueAtTime(.0001, t1); e.gain.exponentialRampToValueAtTime(.09, t1 + .015); e.gain.exponentialRampToValueAtTime(.0001, t1 + 1.4); o.connect(e).connect(out); o.start(t1); o.stop(t1 + 1.5); }); } });
+  if (S.cfg.outro || S.outMode === "quick") chime(oc, out, S.intro + S.itemsT + .3, 12);
+  if (S.end) { [2.0, 3.2].forEach(x => { const o = oc.createOscillator(), g = oc.createGain(), t0 = S.e0 + x / S.ek; o.type = "square"; o.frequency.setValueAtTime(2600, t0); o.frequency.exponentialRampToValueAtTime(700, t0 + .05);
+      g.gain.setValueAtTime(.12, t0); g.gain.exponentialRampToValueAtTime(.0001, t0 + .07); o.connect(g).connect(out); o.start(t0); o.stop(t0 + .1); });
+    chime(oc, out, S.e0 + 3.45 / S.ek, 7); chime(oc, out, S.e0 + 3.62 / S.ek, 12); }
+  const buf = await oc.startRendering();
+  if (id !== renderId) return;
+  track = buf; say($("amsg"), "Nhạc đã sẵn sàng.");
+  if (playing) startAudio();
+}
+function stopAudio() { if (src) { try { src.stop(); } catch (e) {} src = null; } }
+function startAudio() {
+  stopAudio(); if (!track || !S) return;
+  const a = ac(); if (a.state === "suspended") a.resume();
+  const g = a.createGain(); g.gain.value = $("vol").value / 100;
+  src = a.createBufferSource(); src.buffer = track; src.connect(g); g.connect(a.destination);
+  src._g = g; startAt = a.currentTime - t; src.start(0, Math.min(t, track.duration - .01));
+}
+$("vol").oninput = () => { if (src) src._g.gain.value = $("vol").value / 100; };
+$("music").onchange = () => { $("mfile").style.display = $("music").value === "file" ? "" : "none"; if ($("music").value === "file" && !userBuf) $("mfile").click(); renderTrack(); };
+$("mfile").onchange = async e => {
+  const f = e.target.files[0]; if (!f) return; say($("amsg"), "Đang đọc file nhạc…");
+  try { userBuf = await ac().decodeAudioData(await f.arrayBuffer()); renderTrack(); } catch (err) { userBuf = null; say($("amsg"), "Không đọc được file nhạc này. Thử file mp3 hoặc wav khác.", true); }
+};
+
+const mmss = s => Math.floor(s / 60) + ":" + String(Math.floor(s % 60)).padStart(2, "0");
+let lastSync = 0, errShown = false, dragging = false, exporting = false, cancelFlag = false;
+function frame(now) {
+  requestAnimationFrame(frame);
+  try {
+    if (S && !exporting) {
+      if (playing) {
+        t += Math.min(2, Math.max(0, (now - last) / 1000));
+        if (src && AC && AC.state === "running" && now - lastSync > 1500 && Math.abs(AC.currentTime - startAt - t) > .35) { lastSync = now; startAudio(); }
+        if (t >= S.total) { t = S.total; playing = false; stopAudio(); $("play").textContent = "Phát lại"; }
+      }
+      draw(Math.min(t, S.total - .001));
+      if (!dragging) $("seek").value = t / S.total * 1000;
+      $("time").textContent = mmss(t) + " / " + mmss(S.total);
+    }
+  } catch (e) { if (!errShown) { errShown = true; say($("msg"), "Lỗi khi vẽ: " + e.message, true); } }
+  last = now;
+}
+function run() {
+  try {
+    build(JSON.parse($("code").value)); t = 0; playing = true; $("play").textContent = "Tạm dừng"; stopAudio(); renderTrack();
+    ["play", "seek", "export"].forEach(id => $(id).disabled = false);
+    say($("msg"), S.bad.length ? "Đã chạy, nhưng không nhận ra mã nước: " + S.bad.join(", ") : "Đã chạy: " + S.items.length + " nước, dài " + mmss(S.total) + ".", S.bad.length);
+  } catch (e) { say($("msg"), e instanceof SyntaxError ? "Code chưa đúng định dạng JSON: " + e.message : e.message, true); }
+}
+$("run").onclick = () => { ac().resume(); run(); };
+$("sample").onclick = () => { $("code").value = JSON.stringify(SAMPLE, null, 2); if (P) run(); };
+$("play").onclick = () => { if (!S || exporting) return; ac().resume(); if (t >= S.total) t = 0; playing = !playing; $("play").textContent = playing ? "Tạm dừng" : "Phát"; if (playing) startAudio(); else stopAudio(); };
+$("seek").onpointerdown = () => { dragging = true; };
+const endDrag = () => { dragging = false; $("seek").blur(); };
+$("seek").onpointerup = endDrag; $("seek").onpointercancel = endDrag; $("seek").onchange = endDrag; $("seek").onblur = () => { dragging = false; };
+$("seek").oninput = e => { if (S && !exporting) { t = e.target.value / 1000 * S.total; if (playing) startAudio(); } };
+// ---------- MP4 writer (no libraries) ----------
+const cat = parts => { let n = 0; parts.forEach(p => n += p.length); const o = new Uint8Array(n); let k = 0; parts.forEach(p => { o.set(p, k); k += p.length; }); return o; };
+const be = (bytes, ...v) => { const o = new Uint8Array(v.length * bytes), d = new DataView(o.buffer); v.forEach((x, i) => bytes === 4 ? d.setUint32(i * 4, x >>> 0) : d.setUint16(i * 2, x)); return o; };
+const u32 = (...v) => be(4, ...v), u16 = (...v) => be(2, ...v), zeros = n => new Uint8Array(n);
+const str = s => Uint8Array.from([...s].map(c => c.charCodeAt(0)));
+const box = (type, ...p) => { const body = cat(p); return cat([u32(body.length + 8), str(type), body]); };
+const fbox = (type, ver, flags, ...p) => box(type, u32((ver << 24) | flags), ...p);
+const list32 = arr => { const o = new Uint8Array(arr.length * 4), d = new DataView(o.buffer); for (let i = 0; i < arr.length; i++) d.setUint32(i * 4, arr[i]); return o; };
+const dsc = (tag, ...p) => { const b = cat(p); return cat([Uint8Array.of(tag, b.length), b]); };
+const toU8 = b => b instanceof ArrayBuffer ? new Uint8Array(b.slice(0)) : new Uint8Array(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength));
+const MATRIX = u32(0x10000, 0, 0, 0, 0x10000, 0, 0, 0, 0x40000000);
+function runs(deltas) { const o = []; deltas.forEach(d => { if (o.length && o[o.length - 1][1] === d) o[o.length - 1][0]++; else o.push([1, d]); }); return o; }
+function trak(id, kind, w, h, timescale, durTicks, durMs, entry, deltas, sizes, offsets, keys) {
+  const v = kind === "vide", rn = runs(deltas), stts = fbox("stts", 0, 0, u32(rn.length), ...rn.map(r => u32(r[0], r[1])));
+  const stbl = box("stbl", fbox("stsd", 0, 0, u32(1), entry), stts, fbox("stsc", 0, 0, u32(1, 1, 1, 1)), fbox("stsz", 0, 0, u32(0, sizes.length), list32(sizes)), fbox("stco", 0, 0, u32(offsets.length), list32(offsets)),
+    ...(keys ? [fbox("stss", 0, 0, u32(keys.length), list32(keys))] : []));
+  return box("trak",
+    fbox("tkhd", 0, 3, u32(0, 0, id, 0, durMs), zeros(8), u16(0, 0, v ? 0 : 0x100, 0), MATRIX, u32(v ? w * 65536 : 0, v ? h * 65536 : 0)),
+    box("mdia", fbox("mdhd", 0, 0, u32(0, 0, timescale, durTicks), u16(0x55c4, 0)),
+      fbox("hdlr", 0, 0, u32(0), str(kind), zeros(12), str(v ? "Video\0" : "Sound\0")),
+      box("minf", v ? fbox("vmhd", 0, 1, u16(0, 0, 0, 0)) : fbox("smhd", 0, 0, u16(0, 0)), box("dinf", fbox("dref", 0, 0, u32(1), fbox("url ", 0, 1))), stbl)));
+}
+function muxMp4(V, A) { // V: {w,h,fps,desc,chunks:[{d,key}]}  A: {kind,ch,sr,timescale,desc,chunks:[{d,n}]} | null
+  const FT = 1000, n = V.chunks.length, vDur = n * FT, vMs = Math.round(n / V.fps * 1000);
+  const items = V.chunks.map((c, i) => ({ t: i / V.fps, d: c.d, v: 1 }));
+  let aTicks = 0; if (A) A.chunks.forEach(c => { items.push({ t: aTicks / A.timescale, d: c.d, v: 0 }); aTicks += c.n; });
+  items.sort((x, y) => x.t - y.t || y.v - x.v);
+  const ftyp = box("ftyp", str("isom"), u32(512), str("isom"), str("iso2"), str("avc1"), str("mp41"));
+  const aMs = A ? Math.round(aTicks / A.timescale * 1000) : 0;
+  const build = base => {
+    let pos = base; const vo = [], ao = [];
+    items.forEach(it => { (it.v ? vo : ao).push(pos); pos += it.d.length; });
+    const vEntry = box("avc1", zeros(6), u16(1), zeros(16), u16(V.w, V.h), u32(0x00480000, 0x00480000, 0), u16(1), zeros(32), u16(0x18, 0xffff), box("avcC", V.desc));
+    const keys = []; V.chunks.forEach((c, i) => { if (c.key) keys.push(i + 1); });
+    const traks = [trak(1, "vide", V.w, V.h, V.fps * FT, vDur, vMs, vEntry, V.chunks.map(() => FT), V.chunks.map(c => c.d.length), vo, keys)];
+    if (A) {
+      const ext = A.kind === "aac" ? fbox("esds", 0, 0, dsc(3, u16(1), Uint8Array.of(0), dsc(4, Uint8Array.of(0x40, 0x15), zeros(3), u32(192000, 192000), dsc(5, A.desc)), dsc(6, Uint8Array.of(2)))) : box("dOps", Uint8Array.of(0, A.ch), u16(A.preSkip), u32(A.sr), u16(0), Uint8Array.of(0));
+      const aEntry = box(A.kind === "aac" ? "mp4a" : "Opus", zeros(6), u16(1), zeros(8), u16(A.ch, 16, 0, 0), u32(A.timescale * 65536), ext);
+      traks.push(trak(2, "soun", 0, 0, A.timescale, aTicks, aMs, aEntry, A.chunks.map(c => c.n), A.chunks.map(c => c.d.length), ao, null));
+    }
+    return box("moov", fbox("mvhd", 0, 0, u32(0, 0, 1000, Math.max(vMs, aMs), 0x10000), u16(0x100, 0), zeros(8), MATRIX, zeros(24), u32(A ? 3 : 2)), ...traks);
+  };
+  const moovSize = build(0).length, total = items.reduce((s2, it) => s2 + it.d.length, 0);
+  const moov = build(ftyp.length + moovSize + 8);
+  return new Blob([ftyp, moov, u32(total + 8), str("mdat"), ...items.map(it => it.d)], { type: "video/mp4" });
+}
+
+// ---------- fast export (WebCodecs, no screen recording) ----------
+const yieldNow = () => new Promise(r => { const mc = new MessageChannel(); mc.port1.onmessage = () => r(); mc.port2.postMessage(0); });
+const ENC_BTNS = ["run", "sample", "play", "seek", "export", "music", "fmt"];
+async function exportVideo() {
+  if (!S || exporting) return;
+  const xm = $("xmsg");
+  if (!window.VideoEncoder || !window.AudioEncoder) { say(xm, "Trình duyệt này chưa hỗ trợ xuất video. Hãy dùng Chrome hoặc Edge bản mới.", true); return; }
+  if ($("music").value !== "off" && !track) { say(xm, "Nhạc chưa tạo xong, đợi vài giây rồi bấm lại.", true); return; }
+  exporting = true; cancelFlag = false; playing = false; stopAudio(); $("play").textContent = "Phát";
+  ENC_BTNS.forEach(id => $(id).disabled = true); $("xcancel").style.display = ""; $("xprog").value = 0; $("xprog").style.display = "block";
+  const FPS = 30, t0 = performance.now(), N = Math.ceil(S.total * FPS);
+  let ph0 = t0;
+  const prog = (f, label, pf) => { // pf = progress inside the current phase (used for the time estimate)
+    const k = pf ?? f, el = (performance.now() - ph0) / 1000, left = k > .02 ? el * (1 - k) / k + (pf === undefined ? 0 : 3) : null;
+    $("xprog").value = f * 1000;
+    say(xm, label + ": " + Math.min(99, Math.floor(f * 100)) + "% · " + (left === null ? "đang tính thời gian còn lại…" : "còn khoảng " + mmss(left)));
+  };
+  const chk = () => { if (cancelFlag) throw new Error("__cancel"); };
+  let venc = null, aenc = null;
+  try {
+    // 1) audio
+    let A = null, warn = "";
+    if (track) {
+      const cfgs = [["aac", "mp4a.40.2"], ["opus", "opus"]];
+      let pick = null;
+      for (const [kind, codec] of cfgs) { try { const c = { codec, sampleRate: track.sampleRate, numberOfChannels: 2, bitrate: 192000 }; if ((await AudioEncoder.isConfigSupported(c)).supported) { pick = { kind, c }; break; } } catch (e) {} }
+      if (!pick) warn = " (trình duyệt không mã hoá được âm thanh nên video này không có tiếng)";
+      else {
+        const ach = [], out = { kind: pick.kind, ch: 2, sr: track.sampleRate, timescale: pick.kind === "aac" ? track.sampleRate : 48000, preSkip: 312, desc: null, chunks: ach };
+        let aerr = null;
+        aenc = new AudioEncoder({ output: (ch, meta) => {
+          const d = new Uint8Array(ch.byteLength); ch.copyTo(d);
+          const nn = ch.duration ? Math.round(ch.duration * out.timescale / 1e6) : 1024; ach.push({ d, n: nn });
+          if (meta && meta.decoderConfig && meta.decoderConfig.description && !out.desc) {
+            out.desc = toU8(meta.decoderConfig.description);
+            if (pick.kind === "opus" && out.desc.length >= 12 && String.fromCharCode(...out.desc.slice(0, 8)) === "OpusHead") out.preSkip = out.desc[10] | (out.desc[11] << 8);
+          }
+        }, error: e => { aerr = e; } });
+        aenc.configure(pick.c);
+        const vol = $("vol").value / 100, L = track.getChannelData(0), R = track.getChannelData(1), BL = 4096, nS = track.length;
+        for (let off = 0; off < nS; off += BL) {
+          chk(); if (aerr) throw aerr;
+          const len = Math.min(BL, nS - off), data = new Float32Array(len * 2);
+          for (let i = 0; i < len; i++) { data[i] = L[off + i] * vol; data[len + i] = R[off + i] * vol; }
+          const ad = new AudioData({ format: "f32-planar", sampleRate: track.sampleRate, numberOfFrames: len, numberOfChannels: 2, timestamp: Math.round(off / track.sampleRate * 1e6), data });
+          aenc.encode(ad); ad.close();
+          if (aenc.encodeQueueSize > 20) await yieldNow();
+          if ((off / BL) % 40 === 0) { prog(.05 * off / nS, "Đang xử lý âm thanh"); await yieldNow(); }
+        }
+        await aenc.flush(); aenc.close(); aenc = null; if (aerr) throw aerr;
+        if (!out.desc && pick.kind === "aac") { out.desc = Uint8Array.of(0x12, 0x10); }
+        A = out;
+      }
+    }
+    // 2) video
+    let vp = null;
+    for (const codec of ["avc1.640028", "avc1.4d0028"]) { const c = { codec, width: W, height: H, bitrate: 8e6, framerate: FPS, avc: { format: "avc" } }; try { if ((await VideoEncoder.isConfigSupported(c)).supported) { vp = c; break; } } catch (e) {} }
+    if (!vp) throw new Error("Trình duyệt không mã hoá được video H.264. Hãy dùng Chrome hoặc Edge bản mới.");
+    const vch = []; let vdesc = null, verr = null;
+    venc = new VideoEncoder({ output: (ch, meta) => {
+      const d = new Uint8Array(ch.byteLength); ch.copyTo(d); vch.push({ d, key: ch.type === "key" });
+      if (meta && meta.decoderConfig && meta.decoderConfig.description && !vdesc) vdesc = toU8(meta.decoderConfig.description);
+    }, error: e => { verr = e; } });
+    venc.configure(vp);
+    ph0 = performance.now();
+    for (let i = 0; i < N; i++) {
+      chk(); if (verr) throw verr;
+      draw(Math.min(i / FPS, S.total - .001));
+      const vf = new VideoFrame(cv, { timestamp: Math.round(i * 1e6 / FPS), duration: Math.round(1e6 / FPS) });
+      venc.encode(vf, { keyFrame: i % (FPS * 2) === 0 }); vf.close();
+      while (venc.encodeQueueSize > 8) { await new Promise(r => venc.addEventListener("dequeue", r, { once: true })); chk(); if (verr) throw verr; }
+      if (i % 8 === 0) { prog(.05 + .92 * i / N, "Đang dựng video", i / N); await yieldNow(); }
+    }
+    await venc.flush(); venc.close(); venc = null; if (verr) throw verr;
+    if (!vdesc) throw new Error("Không lấy được thông tin mã hoá video.");
+    // 3) pack
+    prog(.98, "Đang đóng gói file"); await yieldNow();
+    const blob = muxMp4({ w: W, h: H, fps: FPS, desc: vdesc, chunks: vch }, A);
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+    a.download = (S.cfg.title || "ban-do").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + (PORT ? "-9x16" : "") + ".mp4"; a.click();
+    say(xm, "Xong sau " + mmss((performance.now() - t0) / 1000) + ". File .mp4 (" + (blob.size / 1048576).toFixed(0) + " MB, dài " + mmss(S.total) + ") đã được tải về máy." + warn);
+  } catch (e) {
+    say(xm, e.message === "__cancel" ? "Đã huỷ xuất video." : "Xuất video bị lỗi: " + (e.message || e), e.message !== "__cancel");
+  } finally {
+    try { if (venc && venc.state !== "closed") venc.close(); } catch (e) {} try { if (aenc && aenc.state !== "closed") aenc.close(); } catch (e) {}
+    exporting = false; ENC_BTNS.forEach(id => $(id).disabled = false); $("xcancel").style.display = "none"; $("xprog").style.display = "none"; t = 0; playing = false;
+  }
+}
+$("export").onclick = exportVideo;
+$("xcancel").onclick = () => { cancelFlag = true; };
+function applyFormat() {
+  PORT = $("fmt").value === "port"; W = PORT ? 1080 : 1920; H = PORT ? 1920 : 1080; L = PORT ? LAY.port : LAY.land;
+  cv.width = W; cv.height = H;
+  cv.style.width = PORT ? "auto" : "100%"; cv.style.height = PORT ? "min(78vh, 900px)" : "auto"; cv.style.margin = PORT ? "0 auto" : "0";
+}
+$("fmt").onchange = () => { if (exporting) return; applyFormat(); if (GJ) { setup(GJ); if (S) run(); } };
+applyFormat();
+$("code").value = JSON.stringify(SAMPLE, null, 2);
+requestAnimationFrame(frame);
+(async () => {
+  try { if (!window.d3) throw new Error("Không tải được thư viện vẽ bản đồ. Kiểm tra mạng rồi tải lại trang."); await loadMap(); say($("msg"), "Bản đồ đã sẵn sàng."); run(); }
+  catch (e) { say($("msg"), e.message, true); }
+})();
+</script>
+<script src="ball.js"></script>
+</body>
+</html>
