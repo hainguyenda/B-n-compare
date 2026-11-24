@@ -5,8 +5,6 @@
   "order": "countdown",
   "quiz": true,
   "spotlight": "VN",
-  "music": "fast",
-  "outroMode": "quick",
   "source": "Data: USDA FAS, Coffee: World Markets and Trade (SỐ LIỆU MINH HOẠ – thay bằng số thật trước khi đăng)",
   "countries": [
     { "code": "BR", "value": 64700000, "fact": "Grows about 1 in 3 coffee beans on Earth" },

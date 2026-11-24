@@ -6,6 +6,17 @@ App dựng video xếp hạng các nước (bản đồ sáng lên, cột 3D, co
 - `src/ball.js`: chế độ countryball
 - `vercel.json`: Vercel phục vụ thư mục `src/`, không cần build
 
+## Công thức Shorts (khung 9:16)
+
+Rút ra từ Short duy nhất của kênh vượt 1.000 view ("Which Country Exports the Most?"), app tự áp dụng cho khung 9:16:
+
+- Khung hình đầu tiên đã có đủ: câu chữ lớn (`hook`, ví dụ `"WHO IS #1|IN EXPORTS?"`) và bục top 3 với #2, #3 lộ tên, #1 là ???. Không còn chữ hiện chậm trên nền trống.
+- 1,6 giây mỗi nước, mở đầu 2,5 giây (3 giây nếu có câu đố): 10 nước khoảng 20 giây.
+- Nhạc nhanh, có tiếng vút mỗi khi nước mới hiện.
+- Không có cảnh Like/Subscribe, không mờ dần ở cuối: hiện toàn cảnh top 10 kèm câu hỏi lớn "Is your country in the top 10? Tell us below", rồi video lặp lại.
+
+Nên dùng `"mode": "stack"` cho Shorts. Ví dụ: `examples/short-ca-phe.json`. Video dài 16:9 giữ nhịp 2,4 giây và cảnh Like/Share/Subscribe.
+
 ## Kiểu hình
 
 `"mode"` trong code, hoặc ô **Kiểu hình** trong app:
@@ -25,8 +36,8 @@ Ví dụ đầy đủ: `examples/qua-dia-cau-ca-phe.json`.
 
 | Trường | Tác dụng |
 | --- | --- |
-| `quiz: true` hoặc `quiz: ["Russia", "IN", "United States"]` | Mở đầu video là câu đố "WHO IS #1?" A/B/C có thanh đếm ngược và tiếng tích tắc; tới lúc lộ #1 hiện "✓ ANSWER B: ...". Đổi chữ bằng `quizTitle`, `quizCta`. |
-| `endCard` | Cảnh cuối nhờ Like, Share, Subscribe; mặc định luôn bật (kênh "World Compared"), `endCard: false` để tắt, `{ "channel", "handle", "text" }` để đổi chữ. Câu hỏi cuối (`question`) chỉ hiện khi tự ghi. |
+| `quiz: true` hoặc `quiz: ["Russia", "IN", "United States"]` | Mở đầu video: câu chữ lớn "WHO IS #1?" (hoặc `hook`) cùng hàng đáp án A/B/C nhỏ ở dưới, không che bục top 3, có tiếng tích tắc; tới lúc lộ #1 hiện "✓ ANSWER B: ...". Đổi chữ bằng `quizTitle`, `quizCta`. |
+| `endCard` | Cảnh cuối nhờ Like, Share, Subscribe; mặc định bật cho video dài, tắt cho Shorts. `endCard: false` để tắt, `{ "channel", "handle", "text" }` để bật/đổi chữ. |
 | `fact` trong từng nước | Một dòng thông tin thú vị hiện ở dưới khi nước đó lên hình. |
 | `spotlight: "VN"` hoặc `{ code: "VN", rank: 16, value: 101300000, say: "..." }` | Nước có trong danh sách thì hiện băng rôn đỏ "VIETNAM IS #2!". Không có thì sau danh sách hiện thẻ "AND VIETNAM? #16". |
 
