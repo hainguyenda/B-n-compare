@@ -97,6 +97,9 @@
       <tr><td>stack</td><td>Chất liệu cột: "people" (đám đông) · "money" (tiền) · "gold" (vàng) · "oil" (thùng dầu) · "crops" (nông sản) · "cubes" (khối màu). Bỏ trống thì app tự đoán theo tiêu đề.</td></tr>
       <tr><td>scale</td><td>"linear" (mặc định) · "hybrid" khi nước đầu quá vượt trội · "volume" lấy căn bậc 3.</td></tr>
       <tr><td>secondsPerCountry</td><td>Số giây dành cho mỗi nước (mặc định 2.4).</td></tr>
+      <tr><td>quiz</td><td><b>Câu đố trước #1</b>: true để app tự lấy #1 cùng #2, #3 làm 3 đáp án A/B/C, hoặc tự ghi danh sách, ví dụ ["Russia", "Canada", "CN"] (phải có nước #1). Đoạn dừng trước #1 kéo dài ~3 giây, có thanh đếm ngược và tiếng tích tắc, lộ #1 thì đáp án đúng chuyển xanh. Đổi chữ bằng <b>quizTitle</b> (mặc định "WHO IS #1?") và <b>quizCta</b> (mặc định "Comment A, B or C").</td></tr>
+      <tr><td>fact</td><td><b>Thông tin thú vị</b>: thêm <code>fact</code> vào từng nước trong countries, ví dụ { code: "CA", value: 9984670, fact: "Has 20% of the world's fresh water" }. Hiện một dòng ở dưới khi nước đó lên hình. Nên ngắn, dưới ~60 ký tự.</td></tr>
+      <tr><td>spotlight</td><td><b>Nước được làm nổi bật</b>: "VN", hoặc { code: "VN", rank: 23, value: 1234567, say: "..." }. Nếu nước đó có trong danh sách: hiện băng rôn đỏ "VIETNAM IS #7!" khi tới lượt. Nếu không có: sau danh sách hiện thẻ "AND VIETNAM? #23" (cần ghi rank, value thì tuỳ) trước câu hỏi cuối. <b>say</b> để thay câu chữ.</td></tr>
       <tr><td>color</td><td>Màu của nước được tô sáng, ví dụ "#F5A524".</td></tr>
       <tr><td>outro</td><td>Cảnh kết: <b>big</b> (chữ to), <b>text</b>, <b>cta</b> (câu hỏi cuối) và <b>highlight</b> (các nước sáng lên lúc kết).</td></tr>
       <tr><td>source</td><td>Dòng ghi nguồn số liệu ở góc dưới.</td></tr>
@@ -104,7 +107,7 @@
       <tr><td>Khung hình</td><td>Chọn 16:9 (YouTube) hoặc 9:16 (YouTube Shorts, TikTok) cạnh nút Chạy xem thử. Video dọc nên ngắn: khoảng 10 nước, mỗi nước 2–3 giây.</td></tr>
       <tr><td>Nhạc nền</td><td>Chọn ngay dưới khung xem trước, không cần viết trong code. Nhạc được ghi luôn vào video khi xuất.</td></tr>
     </table>
-    <pre id="prompt">Câu lệnh mẫu để nhờ AI viết code: "Viết code JSON cho app Bản Đồ Studio theo đúng cấu trúc của code mẫu dưới đây, chủ đề: [10 nước có diện tích lớn nhất thế giới]. Dùng số liệu thật, ghi nguồn vào trường source, chữ trong video bằng tiếng Anh. Chỉ trả về JSON." Sau đó dán kèm code mẫu.</pre>
+    <pre id="prompt">Câu lệnh mẫu để nhờ AI viết code: "Viết code JSON cho app Bản Đồ Studio theo đúng cấu trúc của code mẫu dưới đây, chủ đề: [10 nước có diện tích lớn nhất thế giới]. Dùng số liệu thật, ghi nguồn vào trường source, chữ trong video bằng tiếng Anh. Thêm quiz: true, một fact ngắn (dưới 60 ký tự) cho mỗi nước trong top 5, và spotlight cho Việt Nam (nếu Việt Nam không có trong danh sách thì ghi rank và value thật của Việt Nam). Chỉ trả về JSON." Sau đó dán kèm code mẫu.</pre>
   </div>
 </main>
 
@@ -657,9 +660,9 @@ function drawStackFrame(t, mode) {
   // mini map
   if (mode === "split" && ci >= 0) { const pw = PRT ? W * .34 : Math.min(340, W * .19); drawPip(W - pw - 30, 34, pw, ci, to, 1 - seg(to, 0, .6)); }
   // outro card
-  if (inOut && quick && S.outMode === "quick" && to > TL) {
+  if (inOut && quick && S.outMode === "quick" && to > TL + S.spotT) {
     const q = String(cfg.question || (cfg.outro && cfg.outro.cta && cfg.outro.cta.length < 60 ? cfg.outro.cta : "Did you guess #1? Tell us below"));
-    const a = eout(seg(to, TL, TL + .3)), qy = PRT ? H * .92 : H * .93;
+    const a = eout(seg(to, TL + S.spotT, TL + S.spotT + .3)), qy = PRT ? H * .92 : H * .93;
     ctx.save(); ctx.globalAlpha = a; ctx.textAlign = "center"; ctx.textBaseline = "middle"; fit(q, PRT ? 46 : 44, 900, W - 120);
     const tw = ctx.measureText(q).width, ph = PRT ? 92 : 80;
     ctx.fillStyle = "rgba(8,12,24,.88)"; ctx.strokeStyle = "#FFD23F"; ctx.lineWidth = 3; ctx.beginPath(); ctx.roundRect(W / 2 - tw / 2 - 36, qy - ph / 2, tw + 72, ph, ph / 2); ctx.fill(); ctx.stroke();
@@ -716,7 +719,7 @@ function build(cfg) {
   let items = cfg.countries.map(c => {
     const k = String(c.code || "").toUpperCase(), m = BY[k] || BYN[String(c.name || c.code || "").toLowerCase()];
     if (!m) bad.push(c.code || c.name || "?");
-    return { m, code: /^[A-Z]{2}$/.test(k) ? k : (m && m.code), name: c.name || (m && m.name), value: +c.value || 0 };
+    return { m, code: /^[A-Z]{2}$/.test(k) ? k : (m && m.code), name: c.name || (m && m.name), value: +c.value || 0, fact: c.fact ? String(c.fact) : "" };
   }).filter(x => x.m);
   if (!items.length) throw new Error("Không nhận ra mã nước nào. Dùng mã 2 chữ cái như VN, US, JP.");
   const sorted = [...items].sort((a, b) => b.value - a.value); sorted.forEach((x, i) => x.rank = i + 1);
@@ -726,13 +729,15 @@ function build(cfg) {
   const intro = cfg.introSeconds ?? 3, per = cfg.secondsPerCountry ?? 2.4;
   const outMode = /^(quick|loop|full)$/.test(cfg.outroMode || "") ? cfg.outroMode : (PORT || !cfg.outro ? "quick" : "full");
   const out = outMode === "loop" ? 1.2 : outMode === "quick" ? (cfg.outroSeconds ?? 2.6) : (cfg.outro ? (cfg.outroSeconds ?? 5.5) : 1.5);
-  const sus = (curMode() !== "map" || curMode(cfg) === "ball") && order === "countdown" && items.length >= 3 ? (cfg.suspense ?? (PORT ? .9 : 1.1)) : 0;
+  const quiz = order === "countdown" && items.length >= 3 ? quizOf(cfg, sorted) : null;
+  const sus = quiz ? Math.max(+cfg.suspense || 0, PORT ? 2.8 : 3.2) : (curMode() !== "map" || curMode(cfg) === "ball") && order === "countdown" && items.length >= 3 ? (cfg.suspense ?? (PORT ? .9 : 1.1)) : 0;
+  const spot = spotOf(cfg, items), spotT = spot && !spot.item ? 2.8 : 0;
   const mult = r => cfg.pace === "even" ? 1 : items.length <= 12 ? (r > 3 ? .75 : r > 1 ? 1.05 : 1.1) : (r > 20 ? .7 : r > 10 ? .85 : r > 3 ? 1 : r > 1 ? 1.15 : 1.25);
   const dur = items.map((x, i) => per * mult(x.rank) + (i === items.length - 1 ? sus : 0)), pause = items.map((x, i) => i === items.length - 1 ? sus : 0);
   const st = []; let acc = 0; dur.forEach(d => { st.push(acc); acc += d; }); const itemsT = acc;
   items.forEach(x => loadFlag(x.code));
-  const end = cfg.endCard && outMode !== "loop" ? (cfg.endCard.seconds ?? (outMode === "quick" ? 3.5 : 8)) : 0, ek = Math.max(1, 5 / (end || 5));
-  S = { cfg, items, order, intro, per, out, end, ek, outMode, dur, pause, st, itemsT, e0: intro + itemsT + out, total: intro + itemsT + out + end, accent: cfg.color || "#F5A524", bad,
+  const end = cfg.endCard && outMode !== "loop" ? (cfg.endCard.seconds ?? (outMode === "quick" ? 3.5 : 8)) : 0, ek = Math.max(1, 5 / (end || 5)), out2 = out + spotT;
+  S = { cfg, items, order, intro, per, out: out2, end, ek, outMode, dur, pause, st, itemsT, quiz, spot, spotT, e0: intro + itemsT + out2, total: intro + itemsT + out2 + end, accent: cfg.color || "#F5A524", bad,
         hl: ((cfg.outro && cfg.outro.highlight) || []).map(k => BY[String(k).toUpperCase()]).filter(Boolean) };
   base = document.createElement("canvas"); base.width = W; base.height = H;
   const b = base.getContext("2d"); bg(b);
@@ -768,8 +773,101 @@ function drawFlag(code, x, y, w) { // x,y = left, vertical centre
   ctx.fillText(String.fromCodePoint(...[...code].map(ch => 0x1F1E6 + ch.charCodeAt(0) - 65)), x, y + w * .28);
 }
 
+// ---------- quiz before #1, one fun fact per country, spotlight country ----------
+function quizOf(cfg, sorted) { // cfg.quiz: true (auto: #1 + two runners-up) or a list of names / codes that includes #1
+  if (!cfg.quiz) return null;
+  const one = sorted[0], find = v => { const k = String(v).trim(), u = k.toUpperCase(), l = k.toLowerCase(); return sorted.find(x => x.code === u || String(x.name).toLowerCase() === l); };
+  let opts;
+  if (Array.isArray(cfg.quiz)) opts = cfg.quiz.slice(0, 4).map(v => { const x = find(v); return x ? { name: x.name, code: x.code } : { name: String(v), code: /^[A-Z]{2}$/.test(String(v)) ? String(v) : "" }; });
+  else { const pool = sorted.slice(1, 3).map(x => ({ name: x.name, code: x.code })), at = String(cfg.title || "").length % 3; opts = pool.slice(); opts.splice(Math.min(at, opts.length), 0, { name: one.name, code: one.code }); }
+  if (!opts.some(o => o.code === one.code || o.name === one.name)) opts[opts.length - 1] = { name: one.name, code: one.code };
+  return { opts, answer: opts.findIndex(o => o.code === one.code || o.name === one.name), title: String(cfg.quizTitle || "WHO IS #1?"), cta: String(cfg.quizCta || "Comment A, B or C") };
+}
+function spotOf(cfg, items) { // cfg.spotlight: "VN" or { code, rank, value, say }
+  const sp = cfg.spotlight; if (!sp) return null;
+  const o = typeof sp === "string" ? { code: sp } : sp, code = String(o.code || "").toUpperCase(), item = items.find(x => x.code === code) || null;
+  const m = BY[code], name = o.name || (item && item.name) || (m && m.name) || code;
+  if (!item && !(o.rank > 0)) return null; // outside the list we need its rank to say anything
+  if (!item) loadFlag(code);
+  return { code, item, name, rank: item ? item.rank : +o.rank, value: item ? item.value : (o.value == null ? null : +o.value), say: o.say ? String(o.say) : "" };
+}
+function chip(text, cx, cy, size, fill, stroke, color) { // rounded label centred on (cx, cy)
+  font(size, 900); const w = ctx.measureText(text).width + size * 1.4, h = size * 1.75;
+  ctx.fillStyle = fill; ctx.strokeStyle = stroke; ctx.lineWidth = 3; ctx.beginPath(); ctx.roundRect(cx - w / 2, cy - h / 2, w, h, h / 2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = color; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(text, cx, cy + 1); return w;
+}
+function extras(t) {
+  const { cfg, items, intro } = S, n = items.length, ci = ciAt(t), live = ci >= 0 && ci < n, inOut = ci >= n;
+  const tau0 = live ? t - intro - S.st[ci] : 0, ps = live ? S.pause[ci] : 0, tau = tau0 - ps, pc = live ? S.dur[ci] - ps : 0, to = inOut ? t - (intro + S.itemsT) : 0;
+  ctx.save(); ctx.shadowBlur = 0; ctx.textBaseline = "middle"; ctx.lineJoin = "round";
+  // quiz: answers on screen during the pause before #1, then the right one turns green
+  const qz = S.quiz;
+  if (qz && live && ci === n - 1 && ps > 0 && tau < 1.6) {
+    const a = tau < 0 ? eout(seg(tau0, .05, .35)) : 1 - seg(tau, 1.1, 1.6), shown = tau >= 0, k = qz.opts.length;
+    const cw = PORT ? W - 140 : Math.min(980, W * .56), rh = PORT ? 118 : 86, gap = PORT ? 22 : 16, th = PORT ? 120 : 92, ch = th + k * (rh + gap) + (PORT ? 140 : 112);
+    const x0 = (W - cw) / 2, y0 = (PORT ? H * .44 : H * .52) - ch / 2;
+    ctx.globalAlpha = a * .55; ctx.fillStyle = "#03050c"; ctx.fillRect(0, 0, W, H);
+    ctx.globalAlpha = a; ctx.translate(0, 26 * (1 - a));
+    ctx.fillStyle = "rgba(9,13,26,.96)"; ctx.strokeStyle = "#FFD23F"; ctx.lineWidth = 4; ctx.beginPath(); ctx.roundRect(x0, y0, cw, ch, 30); ctx.fill(); ctx.stroke();
+    ctx.textAlign = "center"; ctx.fillStyle = "#FFD23F"; fit(qz.title, PORT ? 70 : 54, 900, cw - 60); ctx.fillText(qz.title, W / 2, y0 + th * .55);
+    qz.opts.forEach((o, i) => {
+      const y = y0 + th + i * (rh + gap), ok = shown && i === qz.answer, off = shown && !ok, pop = ok ? 1 + .05 * Math.sin(Math.PI * seg(tau, 0, .35)) : 1;
+      ctx.save(); ctx.globalAlpha = a * (off ? .35 : 1); ctx.translate(W / 2, y + rh / 2); ctx.scale(pop, pop); ctx.translate(-W / 2, -(y + rh / 2));
+      ctx.fillStyle = ok ? "#16a34a" : "rgba(255,255,255,.08)"; ctx.strokeStyle = ok ? "#bbf7d0" : "rgba(255,255,255,.28)"; ctx.lineWidth = ok ? 4 : 2;
+      ctx.beginPath(); ctx.roundRect(x0 + 30, y, cw - 60, rh, rh / 2); ctx.fill(); ctx.stroke();
+      const L1 = String.fromCharCode(65 + i), bx = x0 + 30 + rh / 2; ctx.fillStyle = ok ? "#fff" : "#FFD23F"; ctx.beginPath(); ctx.arc(bx, y + rh / 2, rh * .36, 0, 7); ctx.fill();
+      ctx.fillStyle = ok ? "#16a34a" : "#0b1020"; font(rh * .42, 900); ctx.textAlign = "center"; ctx.fillText(L1, bx, y + rh / 2 + 1);
+      let tx = bx + rh * .62; if (o.code) { const fw = rh * .62; flagBox(o.code, tx, y + rh / 2 - fw * .35, fw, fw * .7, 4); tx += fw + 18; }
+      ctx.textAlign = "left"; ctx.fillStyle = "#fff"; fit(o.name, rh * .4, 800, x0 + cw - 50 - tx - (ok ? rh : 0)); ctx.fillText(o.name, tx, y + rh / 2 + 1);
+      if (ok) { ctx.textAlign = "right"; font(rh * .45, 900); ctx.fillText("✓", x0 + cw - 60, y + rh / 2 + 2); }
+      ctx.restore();
+    });
+    const fy = y0 + th + k * (rh + gap) + (PORT ? 52 : 40);
+    if (!shown) { // timer bar drains as the reveal gets closer
+      const bw = cw - 120, f = 1 - clamp(tau0 / ps); ctx.fillStyle = "rgba(255,255,255,.14)"; ctx.beginPath(); ctx.roundRect(W / 2 - bw / 2, fy - 8, bw, 16, 8); ctx.fill();
+      ctx.fillStyle = f > .3 ? "#FFD23F" : "#ef4444"; ctx.beginPath(); ctx.roundRect(W / 2 - bw / 2, fy - 8, Math.max(16, bw * f), 16, 8); ctx.fill();
+      ctx.textAlign = "center"; ctx.fillStyle = "rgba(255,255,255,.85)"; fit(qz.cta, PORT ? 38 : 30, 800, cw - 60); ctx.fillText(qz.cta, W / 2, fy + (PORT ? 50 : 40));
+    } else { ctx.textAlign = "center"; ctx.fillStyle = "#bbf7d0"; fit("Did you get it right?", PORT ? 40 : 32, 800, cw - 60); ctx.fillText("Did you get it right?", W / 2, fy + (PORT ? 22 : 18)); }
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1;
+  }
+  // fun fact: one line under the country while it is on screen
+  if (live && items[ci].fact && tau > .2 && !(qz && ci === n - 1 && tau < 1.6)) {
+    const onMap = curMode() === "map", fcx = onMap && !PORT ? W * .62 : W / 2; // map layout: under the map (9:16), right of the panel (16:9)
+    const a = eout(seg(tau, .2, .5)) * (1 - seg(tau, pc - .25, pc)), fy = onMap ? (PORT ? H * .455 : H - 70) : PORT ? H * .855 : H - 92, txt = items[ci].fact;
+    ctx.globalAlpha = a; font(PORT ? 34 : 27, 700); const maxW = onMap && !PORT ? W * .6 : W - (PORT ? 90 : 220);
+    let sz = PORT ? 34 : 27; while (sz > 18 && ctx.measureText(txt).width > maxW - 80) { sz--; font(sz, 700); }
+    const tw = Math.min(maxW - 80, ctx.measureText(txt).width), bw = tw + 96, bh = sz * 2.1, bx = fcx - bw / 2;
+    ctx.fillStyle = "rgba(9,13,26,.9)"; ctx.strokeStyle = "rgba(56,189,248,.85)"; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.roundRect(bx, fy - bh / 2 + 10 * (1 - a), bw, bh, bh / 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#38bdf8"; font(sz * .95, 900); ctx.textAlign = "center"; ctx.fillText("i", bx + bh * .5, fy + 1 + 10 * (1 - a));
+    ctx.fillStyle = "#fff"; font(sz, 700); ctx.textAlign = "left"; let s2 = txt; while (ctx.measureText(s2).width > tw && s2.length > 4) s2 = s2.slice(0, -2) + "…";
+    ctx.fillText(s2, bx + bh * .85, fy + 1 + 10 * (1 - a)); ctx.globalAlpha = 1;
+  }
+  // spotlight: a banner when "our" country shows up, or a card after the list when it is not in it
+  const sp = S.spot;
+  if (sp && sp.item && live && items[ci] === sp.item && tau > 0) {
+    const a = eout(seg(tau, .05, .3)) * (1 - seg(tau, pc - .2, pc)), y = PORT ? 330 : 210, sc = 1 + .12 * Math.sin(Math.PI * seg(tau, .05, .4));
+    const txt = (sp.say || sp.name + " is #" + sp.rank + "!").toUpperCase();
+    ctx.globalAlpha = a; ctx.translate(W / 2, y); ctx.scale(sc, sc); ctx.translate(-W / 2, -y);
+    ctx.shadowColor = "#f43f5e"; ctx.shadowBlur = 28; chip(txt, W / 2, y, PORT ? 50 : 40, "#e11d48", "#fff", "#fff"); ctx.shadowBlur = 0;
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1;
+  }
+  if (sp && !sp.item && inOut && to > .25 && to < .25 + S.spotT) {
+    const u = to - .25, a = eout(seg(u, 0, .35)) * (1 - seg(u, S.spotT - .35, S.spotT)), cw = PORT ? W - 160 : 820, chh = PORT ? 560 : 420, x0 = (W - cw) / 2, y0 = (PORT ? H * .42 : H * .5) - chh / 2;
+    ctx.globalAlpha = a * .6; ctx.fillStyle = "#03050c"; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = a; ctx.translate(0, 30 * (1 - a));
+    ctx.fillStyle = "rgba(9,13,26,.97)"; ctx.strokeStyle = "#f43f5e"; ctx.lineWidth = 4; ctx.beginPath(); ctx.roundRect(x0, y0, cw, chh, 32); ctx.fill(); ctx.stroke();
+    ctx.textAlign = "center"; ctx.fillStyle = "rgba(255,255,255,.7)"; fit("AND " + sp.name.toUpperCase() + "?", PORT ? 54 : 42, 900, cw - 80); ctx.fillText("AND " + sp.name.toUpperCase() + "?", W / 2, y0 + chh * .16);
+    const fw = PORT ? 170 : 130; flagBox(sp.code, W / 2 - fw / 2, y0 + chh * .27, fw, fw * .68, 10);
+    const pop = 1 + .18 * Math.sin(Math.PI * seg(u, .35, .75)); ctx.save(); ctx.translate(W / 2, y0 + chh * .69); ctx.scale(pop, pop);
+    ctx.fillStyle = "#FFD23F"; font(PORT ? 140 : 108, 900); ctx.fillText("#" + sp.rank, 0, 0); ctx.restore();
+    const sub = sp.say || (sp.value != null ? full(sp.value) + (cfg.unit ? " " + cfg.unit : "") : "");
+    if (sub) { ctx.fillStyle = "#fff"; fit(sub, PORT ? 44 : 34, 800, cw - 80); ctx.fillText(sub, W / 2, y0 + chh * .89); }
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1;
+  }
+  ctx.restore();
+}
 function overlays(t) {
   const { cfg, intro, total } = S;
+  extras(t);
   // intro card
   if (t < intro && curMode() !== "map" && cfg.hook !== false) {
     drawHookText(t);
@@ -978,7 +1076,11 @@ async function renderTrack() {
   S.items.forEach((x, i) => { if (x.rank === 1 && S.pause[i] > .2) { const tr = S.intro + S.st[i] + S.pause[i], bo = oc.createOscillator(), be = oc.createGain(); bo.type = "sine"; bo.frequency.setValueAtTime(95, tr); bo.frequency.exponentialRampToValueAtTime(38, tr + .5);
     be.gain.setValueAtTime(.0001, tr); be.gain.exponentialRampToValueAtTime(.55, tr + .01); be.gain.exponentialRampToValueAtTime(.0001, tr + 1.1); bo.connect(be).connect(out); bo.start(tr); bo.stop(tr + 1.2);
     [72, 76, 79, 84].forEach((m, k) => { const o = oc.createOscillator(), e = oc.createGain(), t1 = tr + k * .035; o.type = "triangle"; o.frequency.value = hz(m); e.gain.setValueAtTime(.0001, t1); e.gain.exponentialRampToValueAtTime(.09, t1 + .015); e.gain.exponentialRampToValueAtTime(.0001, t1 + 1.4); o.connect(e).connect(out); o.start(t1); o.stop(t1 + 1.5); }); } });
-  if (S.cfg.outro || S.outMode === "quick") chime(oc, out, S.intro + S.itemsT + .3, 12);
+  if (S.quiz) { const i = S.items.length - 1, t0 = S.intro + S.st[i], p = S.pause[i];
+    for (let k = 0; t0 + .35 + k * .5 < t0 + p - .15; k++) { const tk = t0 + .35 + k * .5, o = oc.createOscillator(), e = oc.createGain(); o.type = "square"; o.frequency.value = k % 2 ? 1500 : 1900;
+      e.gain.setValueAtTime(.05, tk); e.gain.exponentialRampToValueAtTime(.0001, tk + .05); o.connect(e).connect(out); o.start(tk); o.stop(tk + .06); } }
+  if (S.spotT) { const ts = S.intro + S.itemsT + .3; chime(oc, out, ts, 7); chime(oc, out, ts + .12, 14); }
+  if (S.cfg.outro || S.outMode === "quick") chime(oc, out, S.intro + S.itemsT + .3 + S.spotT, 12);
   if (S.end) { [2.0, 3.2].forEach(x => { const o = oc.createOscillator(), g = oc.createGain(), t0 = S.e0 + x / S.ek; o.type = "square"; o.frequency.setValueAtTime(2600, t0); o.frequency.exponentialRampToValueAtTime(700, t0 + .05);
       g.gain.setValueAtTime(.12, t0); g.gain.exponentialRampToValueAtTime(.0001, t0 + .07); o.connect(g).connect(out); o.start(t0); o.stop(t0 + .1); });
     chime(oc, out, S.e0 + 3.45 / S.ek, 7); chime(oc, out, S.e0 + 3.62 / S.ek, 12); }

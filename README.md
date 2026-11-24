@@ -1,0 +1,34 @@
+# Bản Đồ Studio
+
+App dựng video xếp hạng các nước (bản đồ sáng lên, cột 3D, countryball) cho kênh YouTube. Dán code JSON, xem thử, rồi xuất thẳng ra file .mp4 trong trình duyệt.
+
+- `src/index.html`: toàn bộ app
+- `src/ball.js`: chế độ countryball
+- `vercel.json`: Vercel phục vụ thư mục `src/`, không cần build
+
+## Tính năng giữ chân người xem
+
+| Trường | Tác dụng |
+| --- | --- |
+| `quiz: true` hoặc `quiz: ["Russia", "IN", "United States"]` | Trước khi lộ #1, hiện câu đố A/B/C có thanh đếm ngược và tiếng tích tắc; lộ #1 thì đáp án đúng chuyển xanh. Đổi chữ bằng `quizTitle`, `quizCta`. |
+| `fact` trong từng nước | Một dòng thông tin thú vị hiện ở dưới khi nước đó lên hình. |
+| `spotlight: "VN"` hoặc `{ code: "VN", rank: 16, value: 101300000, say: "..." }` | Nước có trong danh sách thì hiện băng rôn đỏ "VIETNAM IS #2!". Không có thì sau danh sách hiện thẻ "AND VIETNAM? #16". |
+
+Ví dụ:
+
+```json
+{
+  "title": "The 10 Biggest Coffee Producers",
+  "unit": "tonnes",
+  "quiz": true,
+  "spotlight": "VN",
+  "countries": [
+    { "code": "BR", "value": 3900000, "fact": "Grows about 1 in 3 coffee beans on Earth" },
+    { "code": "VN", "value": 1800000, "fact": "Mostly robusta, the strong bitter bean" }
+  ]
+}
+```
+
+## Kiểm tra khi sửa
+
+`tools/shots.cjs` dựng vài khung hình của một file cấu hình ra ảnh PNG, `tools/compare.cjs` so từng điểm ảnh giữa hai địa chỉ (ví dụ bản đang chạy với bản đang sửa). Cả hai cần Playwright.

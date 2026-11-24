@@ -545,9 +545,9 @@ const ttl = String(cfg.title || "").toUpperCase(); fit(ttl, PRT ? 30 : 30, 900, 
 }
 }
 if (cfg.source) { ctx.save(); ctx.fillStyle = "rgba(255,255,255,.92)"; ctx.lineJoin = "round"; ctx.lineWidth = 4; ctx.strokeStyle = "rgba(0,0,0,.55)"; fit(cfg.source, PRT ? 17 : 15, 600, W - 60); ctx.textAlign = "left"; ctx.strokeText(cfg.source, 28, H - 20); ctx.fillText(cfg.source, 28, H - 20); ctx.restore(); }
-if (inOut && quick && S.outMode === "quick" && to > TL) {
+if (inOut && quick && S.outMode === "quick" && to > TL + (S.spotT || 0)) {
 const q = String(cfg.question || (cfg.outro && cfg.outro.cta && cfg.outro.cta.length < 60 ? cfg.outro.cta : "Did you guess #1? Tell us below"));
-const a = eout(seg(to, TL, TL + .3)), qy = PRT ? H * .92 : H * .93;
+const a = eout(seg(to, TL + (S.spotT || 0), TL + (S.spotT || 0) + .3)), qy = PRT ? H * .92 : H * .93;
 ctx.save(); ctx.globalAlpha = a; ctx.textAlign = "center"; ctx.textBaseline = "middle"; fit(q, PRT ? 46 : 44, 900, W - 120);
 const tw = ctx.measureText(q).width, ph = PRT ? 92 : 80;
 ctx.fillStyle = "rgba(8,12,24,.88)"; ctx.strokeStyle = "#FFD23F"; ctx.lineWidth = 3; ctx.beginPath(); ctx.roundRect(W / 2 - tw / 2 - 36, qy - ph / 2, tw + 72, ph, ph / 2); ctx.fill(); ctx.stroke();
