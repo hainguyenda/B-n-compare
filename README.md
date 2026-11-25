@@ -62,3 +62,7 @@ Ví dụ:
 ## Kiểm tra khi sửa
 
 `tools/shots.cjs` dựng vài khung hình của một file cấu hình ra ảnh PNG, `tools/compare.cjs` so từng điểm ảnh giữa hai địa chỉ (ví dụ bản đang chạy với bản đang sửa). Cả hai cần Playwright.
+
+## TikTok
+
+Khung **9:16 · TikTok** vẽ cảnh 9:16 bình thường rồi thu nhỏ 80% vào vùng an toàn (cách trên 150px, trái 64px, chừa cột nút bên phải và phần chú thích bên dưới), nền xung quanh là bản mờ tối của chính cảnh đó; luôn tắt endCard (cảnh Like/Share/Subscribe của YouTube). `"format": "tiktok"` trong code tự chọn khung này khi bấm Chạy (`"shorts"` / `"youtube"` cho hai khung kia).

@@ -41,7 +41,7 @@
       <button id="run">Chạy xem thử</button>
       <button id="sample" class="ghost">Nạp code mẫu</button>
       <span class="msg" style="color:var(--text)">Khung hình:</span>
-      <select id="fmt"><option value="land">16:9 · YouTube</option><option value="port">9:16 · Shorts / TikTok</option></select>
+      <select id="fmt"><option value="land">16:9 · YouTube</option><option value="port">9:16 · YouTube Shorts</option><option value="tiktok">9:16 · TikTok</option></select>
       <span class="msg" style="color:var(--text)">Kiểu hình:</span>
       <select id="vmode"><option value="auto">Theo code (mode)</option><option value="map">Bản đồ sáng lên</option><option value="stack">Cột 3D to dần</option><option value="stack2">Cột 3D v2 (xếp từng khối)</option><option value="ballstack">Countryball ngồi trên đống xe / cột</option><option value="split">Cột 3D + bản đồ nhỏ</option><option value="ball">Countryball nhí nhảnh</option><option value="globe">Quả địa cầu xoay</option><option value="bubble">Bong bóng trên bản đồ</option><option value="race">Đường đua</option></select>
       <span class="msg" style="color:var(--text)">Nền bóng:</span>
@@ -104,7 +104,7 @@
       <tr><td>outro</td><td>Cảnh kết: <b>big</b> (chữ to), <b>text</b>, <b>cta</b> (câu hỏi cuối) và <b>highlight</b> (các nước sáng lên lúc kết).</td></tr>
       <tr><td>source</td><td>Dòng ghi nguồn số liệu ở góc dưới.</td></tr>
       <tr><td>endCard</td><td>Cảnh cuối kêu gọi Like, Share &amp; Subscribe. <b>Video dài 16:9: mặc định bật</b> (tên kênh "World Compared"), ghi <b>endCard: false</b> để tắt. <b>Shorts 9:16: mặc định tắt</b> để video kết thúc gọn và tự lặp lại; muốn bật thì ghi endCard. Tuỳ chỉnh: <b>channel</b> (tên kênh), <b>handle</b> (@kênh), <b>text</b> (câu nhắn), <b>seconds</b> (số giây, mặc định 8). Bỏ dòng này nếu không muốn có cảnh cuối.</td></tr>
-      <tr><td>Khung hình</td><td>Chọn 16:9 (YouTube) hoặc 9:16 (YouTube Shorts, TikTok) cạnh nút Chạy xem thử. Video dọc nên ngắn: khoảng 10 nước, mỗi nước 2–3 giây.</td></tr>
+      <tr><td>Khung hình</td><td>Chọn 16:9 (YouTube), 9:16 YouTube Shorts hoặc 9:16 TikTok cạnh nút Chạy xem thử. <b>9:16 TikTok</b>: hình được thu nhỏ vào vùng an toàn (không bị các nút bên phải, thanh trên và chú thích bên dưới của TikTok che), nền xung quanh là hình mờ; tự bỏ cảnh Like/Subscribe của YouTube. Ghi <b>"format": "tiktok"</b> (hoặc "shorts", "youtube") trong code thì app tự chọn khung khi bấm Chạy. Video dọc nên ngắn: khoảng 10 nước.</td></tr>
       <tr><td>Nhạc nền</td><td>Chọn ngay dưới khung xem trước, không cần viết trong code. Nhạc được ghi luôn vào video khi xuất.</td></tr>
     </table>
     <pre id="prompt">Câu lệnh mẫu để nhờ AI viết code: "Viết code JSON cho app Bản Đồ Studio theo đúng cấu trúc của code mẫu dưới đây, chủ đề: [10 nước có diện tích lớn nhất thế giới]. Dùng số liệu thật, ghi nguồn vào trường source, chữ trong video bằng tiếng Anh. Thêm quiz: true, một fact ngắn (dưới 60 ký tự) cho mỗi nước trong top 5, và spotlight cho Việt Nam (nếu Việt Nam không có trong danh sách thì ghi rank và value thật của Việt Nam). Chỉ trả về JSON." Sau đó dán kèm code mẫu.</pre>
@@ -148,8 +148,9 @@ const MAPS = [
   "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson"
 ];
 const $ = id => document.getElementById(id);
-let W = 1920, H = 1080, PORT = false, L = null;
-const cv = $("cv"), ctx = cv.getContext("2d");
+let W = 1920, H = 1080, PORT = false, TT = false, L = null;
+const cv = $("cv"), ctx0 = cv.getContext("2d");
+let ctx = ctx0; // TikTok: the scene is drawn on ttCan, then framed inside TikTok's safe area on cv
 const LAY = {
   land: { map: [[520, 175], [1880, 955]], ms: 1,
     head: { align: "left", x: 520, ty: 82, ts: 50, sy: 124, ss: 25, w: 1340 }, src: { align: "right", x: 1880, y: 1062, w: 1300, s: 17 },
@@ -1186,7 +1187,7 @@ function build(cfg) {
     pause.fill(0); items.forEach((x, j) => st[j] = j ? raceStops[j - 1] + .3 : 0); st.forEach((v, j) => dur[j] = (j < m - 1 ? st[j + 1] : itemsT) - v);
   }
   items.forEach(x => loadFlag(x.code));
-  const endCard = cfg.endCard === false || (PORT && cfg.endCard == null) ? null : Object.assign({ channel: "World Compared", text: quiz ? "Like & share if you guessed #1 right!" : "Like & share if you learned something new!" }, cfg.endCard || {}); // Like / Share / Subscribe close: on for 16:9, off for Shorts (dead time that breaks the loop) unless endCard is given
+  const endCard = cfg.endCard === false || TT || (PORT && cfg.endCard == null) ? null : Object.assign({ channel: "World Compared", text: quiz ? "Like & share if you guessed #1 right!" : "Like & share if you learned something new!" }, cfg.endCard || {}); // Like / Share / Subscribe close: on for 16:9, off for Shorts (dead time that breaks the loop) unless endCard is given
   const end = endCard && outMode !== "loop" ? (endCard.seconds ?? (outMode === "quick" ? 3.5 : 8)) : 0, ek = Math.max(1, 5 / (end || 5)), out2 = out + spotT;
   S = { cfg, items, order, intro, per, out: out2, end, ek, outMode, dur, pause, st, itemsT, quiz, spot, spotT, e0: intro + itemsT + out2, total: intro + itemsT + out2 + end, accent: cfg.color || "#F5A524", bad, endCard, raceStops, noFade: PORT && !end && outMode !== "full",
         hl: ((cfg.outro && cfg.outro.highlight) || []).map(k => BY[String(k).toUpperCase()]).filter(Boolean) };
@@ -1330,7 +1331,23 @@ function overlays(t) {
   if (S.end && t >= S.e0) drawEnd((t - S.e0) * S.ek);
   const f = S.outMode === "loop" || S.noFade ? 0 : seg(t, total - .5, total); if (f > 0) { ctx.globalAlpha = f; ctx.fillStyle = "#05070F"; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1; }
 }
+// ---------- TikTok: keep everything clear of TikTok's own buttons and caption ----------
+// The 9:16 scene is drawn as usual, then shrunk into the safe box (clear of the top tabs, the right-hand
+// buttons and the caption at the bottom); the rest of the frame is a blurred, darkened copy of the scene.
+const TT_BOX = { x: 64, y: 150, s: .8 }, ttCan = document.createElement("canvas"), ttSmall = document.createElement("canvas");
 function draw(t) {
+  if (!TT) return drawScene(t);
+  if (ttCan.width !== W || ttCan.height !== H) { ttCan.width = W; ttCan.height = H; ttSmall.width = 108; ttSmall.height = 192; }
+  const c2 = ttCan.getContext("2d"); c2.setTransform(1, 0, 0, 1, 0, 0); c2.globalAlpha = 1; c2.shadowBlur = 0;
+  ctx = c2; try { drawScene(t); } finally { ctx = ctx0; }
+  const sm = ttSmall.getContext("2d"); sm.imageSmoothingEnabled = true; sm.filter = "blur(5px)"; sm.drawImage(ttCan, -12, -20, 132, 232); sm.filter = "none";
+  const { x, y, s } = TT_BOX, bw = W * s, bh = H * s;
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.shadowBlur = 0; ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(ttSmall, 0, 0, W, H); ctx.fillStyle = "rgba(4,6,14,.55)"; ctx.fillRect(0, 0, W, H);
+  ctx.shadowColor = "rgba(0,0,0,.65)"; ctx.shadowBlur = 40; ctx.beginPath(); ctx.roundRect(x, y, bw, bh, 30); ctx.fillStyle = "#000"; ctx.fill();
+  ctx.shadowBlur = 0; ctx.clip(); ctx.drawImage(ttCan, x, y, bw, bh); ctx.restore();
+}
+function drawScene(t) {
   { const md = curMode(); if (md === "ball") { drawBallFrame(t); overlays(t); return; } if (md === "globe") { drawGlobeFrame(t); overlays(t); return; } if (md === "race") { drawRaceFrame(t); overlays(t); return; } if (md === "stack2" || md === "ballstack") { drawStack2Frame(t); overlays(t); return; } if (md !== "map" && md !== "bubble") { drawStackFrame(t, md); overlays(t); return; } }
   const { cfg, items, intro, per, total, accent } = S, n = items.length;
   ctx.globalAlpha = 1; ctx.shadowBlur = 0; ctx.textAlign = "left"; ctx.drawImage(base, 0, 0);
@@ -1592,7 +1609,9 @@ function frame(now) {
 }
 function run() {
   try {
-    build(JSON.parse($("code").value)); t = 0; playing = true; $("play").textContent = "Tạm dừng"; stopAudio(); renderTrack();
+    const j = JSON.parse($("code").value), fv = { tiktok: "tiktok", shorts: "port", "9:16": "port", youtube: "land", "16:9": "land" }[String(j.format || "").toLowerCase()];
+    if (fv && $("fmt").value !== fv && !exporting) { $("fmt").value = fv; applyFormat(); if (GJ) setup(GJ); } // "format" in the code picks the frame
+    build(j); t = 0; playing = true; $("play").textContent = "Tạm dừng"; stopAudio(); renderTrack();
     ["play", "seek", "export"].forEach(id => $(id).disabled = false);
     say($("msg"), S.bad.length ? "Đã chạy, nhưng không nhận ra mã nước: " + S.bad.join(", ") : "Đã chạy: " + S.items.length + " nước, dài " + mmss(S.total) + ".", S.bad.length);
   } catch (e) { say($("msg"), e instanceof SyntaxError ? "Code chưa đúng định dạng JSON: " + e.message : e.message, true); }
@@ -1742,7 +1761,7 @@ async function exportVideo() {
 $("export").onclick = exportVideo;
 $("xcancel").onclick = () => { cancelFlag = true; };
 function applyFormat() {
-  PORT = $("fmt").value === "port"; W = PORT ? 1080 : 1920; H = PORT ? 1920 : 1080; L = PORT ? LAY.port : LAY.land;
+  TT = $("fmt").value === "tiktok"; PORT = $("fmt").value === "port" || TT; W = PORT ? 1080 : 1920; H = PORT ? 1920 : 1080; L = PORT ? LAY.port : LAY.land;
   cv.width = W; cv.height = H;
   cv.style.width = PORT ? "auto" : "100%"; cv.style.height = PORT ? "min(78vh, 900px)" : "auto"; cv.style.margin = PORT ? "0 auto" : "0";
 }
