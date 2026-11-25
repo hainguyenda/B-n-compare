@@ -43,7 +43,7 @@
       <span class="msg" style="color:var(--text)">Khung hình:</span>
       <select id="fmt"><option value="land">16:9 · YouTube</option><option value="port">9:16 · Shorts / TikTok</option></select>
       <span class="msg" style="color:var(--text)">Kiểu hình:</span>
-      <select id="vmode"><option value="auto">Theo code (mode)</option><option value="map">Bản đồ sáng lên</option><option value="stack">Cột 3D to dần</option><option value="stack2">Cột 3D v2 (xếp từng khối)</option><option value="split">Cột 3D + bản đồ nhỏ</option><option value="ball">Countryball nhí nhảnh</option><option value="globe">Quả địa cầu xoay</option><option value="bubble">Bong bóng trên bản đồ</option><option value="race">Đường đua</option></select>
+      <select id="vmode"><option value="auto">Theo code (mode)</option><option value="map">Bản đồ sáng lên</option><option value="stack">Cột 3D to dần</option><option value="stack2">Cột 3D v2 (xếp từng khối)</option><option value="ballstack">Countryball ngồi trên đống xe / cột</option><option value="split">Cột 3D + bản đồ nhỏ</option><option value="ball">Countryball nhí nhảnh</option><option value="globe">Quả địa cầu xoay</option><option value="bubble">Bong bóng trên bản đồ</option><option value="race">Đường đua</option></select>
       <span class="msg" style="color:var(--text)">Nền bóng:</span>
       <select id="btheme"><option value="auto">Tự đổi (trời xanh → hoàng hôn)</option><option value="comic_sky">Trời xanh</option><option value="sunset_drama">Hoàng hôn</option><option value="studio_dark">Studio tối</option></select>
       <span id="msg" class="msg">Đang tải bản đồ…</span>
@@ -92,9 +92,9 @@
       <tr><td>question</td><td>Câu hỏi hiện ở cuối chế độ quick, ví dụ "Did you guess #1? Tell us below".</td></tr>
       <tr><td>suspense</td><td>Số giây dừng lại trước nước #1 (mặc định 0.9 Shorts / 1.1 video dài). Đặt 0 để tắt.</td></tr>
       <tr><td>music</td><td>"gen" · "fast" (nhịp nhanh cho Shorts) · "off". Bạn vẫn có thể chọn file nhạc riêng ở ô Nhạc nền.</td></tr>
-      <tr><td>mode</td><td>"map": bản đồ sáng lên · "stack": cột 3D to dần, nước đứng đầu vọt lên cuối video · "split": cột 3D kèm bản đồ nhỏ góc phải. Có thể ép bằng ô "Kiểu hình". · "globe": quả địa cầu xoay tới từng nước, cột sáng cao theo giá trị · "bubble": bong bóng to theo giá trị mọc lên trên bản đồ · "race": đường đua, mỗi nước một làn, cùng xuất phát, nước nào hết số liệu thì dừng và hiện hạng, #1 về đích (nên dùng tối đa ~12 nước) · "stack2": Cột 3D v2 (chữ to, xếp từng khối, #1 phá khung, bảng tổng kết cuối) — bản "stack" vẫn giữ nguyên</td></tr>
+      <tr><td>mode</td><td>"map": bản đồ sáng lên · "stack": cột 3D to dần, nước đứng đầu vọt lên cuối video · "split": cột 3D kèm bản đồ nhỏ góc phải. Có thể ép bằng ô "Kiểu hình". · "globe": quả địa cầu xoay tới từng nước, cột sáng cao theo giá trị · "bubble": bong bóng to theo giá trị mọc lên trên bản đồ · "race": đường đua, mỗi nước một làn, cùng xuất phát, nước nào hết số liệu thì dừng và hiện hạng, #1 về đích (nên dùng tối đa ~12 nước) · "stack2": Cột 3D v2 (chữ to, xếp từng khối, #1 phá khung, bảng tổng kết cuối) — bản "stack" vẫn giữ nguyên · "ballstack": countryball ngồi trên đỉnh một đống, chạy giống "stack2" (từng tầng rơi xuống, #1 phá khung, bảng tổng kết); với "stack": "cars" là đống xe hơi hoạt hình, chất liệu khác thì bóng ngồi trên cột 3D; nền trời theo ô "Nền bóng"</td></tr>
       <tr><td>visualStyle, ballTheme</td><td>"visualStyle": "countryball" bật chế độ bóng quốc gia nhí nhảnh (hoặc chọn ô Kiểu hình = Countryball nhí nhảnh; cũng có thể viết "mode": "ball"). "ballTheme": "comic_sky" (trời xanh) · "sunset_drama" (hoàng hôn) · "studio_dark" (nền tối). Bỏ trống thì tự đổi từ trời xanh sang hoàng hôn khi vào Top 3.</td></tr>
-      <tr><td>stack</td><td>Chất liệu cột: "people" (đám đông) · "money" (tiền) · "gold" (vàng) · "oil" (thùng dầu) · "crops" (nông sản) · "cubes" (khối màu). Bỏ trống thì app tự đoán theo tiêu đề.</td></tr>
+      <tr><td>stack</td><td>Chất liệu cột: "people" (đám đông) · "money" (tiền) · "gold" (vàng) · "oil" (thùng dầu) · "crops" (nông sản) · "cubes" (khối màu) · "cars" (đống xe hơi, dùng với mode "ballstack"). Bỏ trống thì app tự đoán theo tiêu đề.</td></tr>
       <tr><td>scale</td><td>"linear" (mặc định) · "hybrid" khi nước đầu quá vượt trội · "volume" lấy căn bậc 3.</td></tr>
       <tr><td>secondsPerCountry</td><td>Số giây dành cho mỗi nước (mặc định 2.4 cho video dài, 1.6 cho Shorts 9:16). Shorts còn mặc định: mở đầu 2,5 giây, nhạc nhanh, không có cảnh Like/Subscribe, không mờ dần ở cuối để video lặp liền mạch.</td></tr>
       <tr><td>quiz</td><td><b>Câu đố mở đầu</b>: true để app tự chọn 3 đáp án A/B/C có nước #1 (kiểu cột 3D và countryball: #1, #4, #5 vì bục đã lộ #2, #3; kiểu khác: #1, #2, #3), hoặc tự ghi danh sách, ví dụ ["Russia", "Canada", "CN"]. Câu chữ lớn mở đầu là <b>hook</b> (mặc định "WHO IS #1?"), các đáp án hiện thành một hàng nhỏ ở dưới, không che hình; tới lúc lộ #1 hiện "✓ ANSWER B: ...". <b>quizCta</b> đổi dòng "Comment A, B or C".</td></tr>
@@ -919,44 +919,100 @@ function tag2(txt, cx, cy, size, color) { // outlined text, no box
   ctx.strokeText(txt, cx, cy); ctx.fillStyle = color; ctx.fillText(txt, cx, cy); ctx.textBaseline = "alphabetic";
 }
 function drawHook2(t) { // intro podium: #2 and #3 named in big type, #1 hidden
-  const { cfg, items, intro } = S, PRT = PORT, kind = stackKind(cfg);
+  const { cfg, items, intro } = S, PRT = PORT, BS = curMode() === "ballstack", kind = BS ? pileKind(cfg) : stackKind(cfg), CARS = BS && kind === "cars";
   const top = items.filter(x => x.rank <= 3).sort((a, b) => a.rank - b.rank); if (!top.length) return;
-  const baseY = H * (PRT ? .77 : .76), maxH = (baseY - (PRT ? 430 : 250)) * (PRT ? .8 : .72), gmax = Math.max(...top.map(x => mscale(x.value, cfg))); // 16:9: a bit lower, clear of the headline
-  const grow = .85 + .15 * eout(clamp(t / .8)), push = 1 + .05 * clamp(t / Math.max(.5, intro)), bw = PRT ? Math.min(300, W * .27) : Math.min(250, W * .17);
+  const bw = PRT ? Math.min(300, W * .27) : Math.min(250, W * .17), baseY = H * (PRT ? .77 : .76), maxH = (baseY - (PRT ? 430 : 250) - (BS ? bw * (PRT ? 1.1 : .7) : 0)) * (PRT || BS ? .8 : .72), gmax = Math.max(...top.map(x => mscale(x.value, cfg))); // 16:9: a bit lower, clear of the headline
+  const grow = .85 + .15 * eout(clamp(t / .8)), push = 1 + .05 * clamp(t / Math.max(.5, intro));
   const order = top.length >= 3 ? [top[1], top[0], top[2]] : top.length === 2 ? [top[1], top[0]] : [top[0]], xs = order.length === 3 ? [.26, .5, .74] : order.length === 2 ? [.36, .64] : [.5], tags = [];
   ctx.save(); ctx.translate(W / 2, H * .62); ctx.scale(push, push); ctx.translate(-W / 2, -H * .62);
   order.forEach((it, k) => {
     const my = it.rank === 1, rel = mscale(it.value, cfg) / gmax, h = Math.max(30, rel * maxH * grow * (my ? 1.08 : 1)), wv = bw * clamp(Math.pow(rel, .22), .6, 1.05), cxm = W * xs[k];
-    if (my) { const bwid = wv * 2.1, bg2 = ctx.createLinearGradient(0, baseY, 0, baseY - h - 160); bg2.addColorStop(0, "rgba(255,210,63,.30)"); bg2.addColorStop(1, "rgba(255,210,63,0)");
-      ctx.save(); ctx.fillStyle = bg2; ctx.fillRect(cxm - bwid / 2 + wv * .17, baseY - h - 160, bwid, h + 160);
-      for (let j = 0; j < 46; j++) { const ph = (t * .5 + (j * .137) % 1) % 1, px = cxm + wv * .17 + Math.sin(j * 7.3 + t * 1.7) * wv * (.55 + (j % 5) * .1), py = baseY - ph * (h + 170), r = 1.6 + (j % 3) * 1.1;
+    if (my) { const bwid = wv * 2.1, bg2 = ctx.createLinearGradient(0, baseY, 0, baseY - h - 160), co = CARS ? 0 : wv * .17, hb = h + (BS ? 260 : 160); bg2.addColorStop(0, "rgba(255,210,63,.30)"); bg2.addColorStop(1, "rgba(255,210,63,0)");
+      ctx.save(); ctx.fillStyle = bg2; ctx.fillRect(cxm - bwid / 2 + co, baseY - hb, bwid, hb);
+      for (let j = 0; j < 46; j++) { const ph = (t * .5 + (j * .137) % 1) % 1, px = cxm + co + Math.sin(j * 7.3 + t * 1.7) * wv * (.55 + (j % 5) * .1), py = baseY - ph * (hb + 10), r = 1.6 + (j % 3) * 1.1;
         ctx.globalAlpha = Math.sin(Math.PI * ph) * .95; ctx.fillStyle = j % 4 ? "#FFD23F" : "#FFF4B0"; ctx.beginPath(); ctx.arc(px, py, r, 0, 7); ctx.fill(); } ctx.restore(); }
+    if (BS) { // a pile with a countryball on top: same car size on all three piles; #1 is a mystery ball
+      const R1 = Math.max(3, Math.round(maxH * 1.08 / (bw / (PILE_C * CAR_AR)))), R = Math.max(2, Math.round(R1 * rel / (my ? 1 : 1.08))), gm = { cx: cxm, w: wv, h, floor: baseY }, br = pileBallR(gm, it, CARS, R), bxx = CARS ? cxm : cxm + wv * .17;
+      ctx.save(); if (my) { ctx.shadowColor = "#FFD23F"; ctx.shadowBlur = 36 + 14 * Math.sin(t * 7); }
+      if (CARS) drawCarPile(gm, it, { rows: R }); else drawTower(gm, it, { kind, cfg, cur: my, grow: 1, val: it.value, t, label: null, card: false, badge: null, shift: 0, noBadge: true });
+      ctx.restore();
+      drawPileBall(bxx, baseY - h + (CARS ? 2 : -wv * .11), br, it, { t: t + k * .5, mystery: my, crown: my, dp: .55 + .45 * clamp(t / .6), emo: my ? null : "shocked", look: k === 0 ? 1 : -1 });
+      tags.push({ it, my, x: bxx, top: baseY - h - 2 * br - (my ? br * .5 : 0) - (CARS ? 0 : wv * .11) }); return;
+    }
     ctx.save(); if (my) { ctx.shadowColor = "#FFD23F"; ctx.shadowBlur = 36 + 14 * Math.sin(t * 7); }
     drawTower({ cx: cxm, w: wv, h, floor: baseY }, it, { kind, cfg, cur: my, grow: 1, val: it.value, t, label: null, card: false, badge: null, shift: 0, mystery: my });
     ctx.restore(); tags.push({ it, my, x: cxm + wv * .17, top: baseY - h - wv * .22 });
   });
   const sz = PRT ? 36 : 30;
-  tags.forEach(g => { const cx = g.x - (PRT ? 30 : 26);
-    if (g.my) pill2("#1  ???", g.x, g.top - sz * 1.15, sz * 1.15, "#FFD23F", "#fff", "#0b1020", null);
+  tags.forEach(g => { const cx = BS ? g.x : g.x - (PRT ? 30 : 26);
+    if (g.my) { if (!BS) pill2("#1  ???", g.x, g.top - sz * 1.15, sz * 1.15, "#FFD23F", "#fff", "#0b1020", null); } // ballstack: the black "?" ball already says it
     else pill2("#" + g.it.rank + "  " + g.it.name, cx, baseY + sz * 1.3, sz * .82, "rgba(9,13,26,.92)", "#fff", "#fff", g.it.code);
     tag2(g.my ? "???" : short(g.it.value), cx, baseY + sz * (g.my ? 1.3 : 2.75), sz * (g.my ? 1.1 : .95), g.my ? "#FFD23F" : "#fff"); });
   ctx.restore();
 }
+// ================= COUNTRYBALL ON A PILE ("ballstack"): stack2's timeline, a countryball sitting on top; "stack": "cars" = a pile of cartoon cars =================
+const PILE_C = 2, CAR_AR = 2.2, CAR_COLS = ["#e63946", "#1d4ed8", "#facc15", "#f1f5f9", "#1f2937", "#16a34a", "#f97316", "#94a3b8", "#0ea5e9", "#be185d"];
+function pileKind(cfg) { const o = String(cfg.stack || "").toLowerCase(); if (o === "cars" || o === "car") return "cars"; if (!o && /\bcars?\b|vehicle|automobile|automaker|carmaker/.test([cfg.title, cfg.subtitle, cfg.unit].join(" ").toLowerCase())) return "cars"; return stackKind(cfg); }
+function pileBaseW() { return PORT ? Math.min(250, W * .24) : Math.min(260, W * .15); }
+function pileAllow() { return pileBaseW() * .9 + 24; } // head room for the ball above the tallest pile
+function pileRows(it) { const maxH = H * (PORT ? .77 : .76) - (PORT ? 430 : 250) - pileAllow(), k = it.rank === 1 && s2Breaks() ? 1.55 : 1; return Math.max(3, Math.round(maxH * k / (pileBaseW() / (PILE_C * CAR_AR)))); }
+function rnd3(a, b, c) { let z = (a * 374761393 + b * 668265263 + c * 2147483647) | 0; z = Math.imul(z ^ (z >>> 13), 1274126177); z ^= z >>> 16; return (z >>> 0) / 4294967296; }
+function drawCar(x, yb, cw, ch, col, type, dir, rot) { // side view, bottom-centre at (x, yb), facing dir (1 right, -1 left)
+  ctx.save(); ctx.translate(x, yb); ctx.rotate(rot); ctx.scale(dir, 1);
+  const lw = Math.max(1, ch * .06), wr = ch * .2, wy = -wr;
+  if (ch < 9) { ctx.fillStyle = col; ctx.fillRect(-cw / 2, -ch * .8, cw, ch * .6); ctx.fillStyle = "#111"; ctx.fillRect(-cw * .35, -ch * .25, cw * .2, ch * .25); ctx.fillRect(cw * .15, -ch * .25, cw * .2, ch * .25); ctx.restore(); return; }
+  ctx.lineJoin = "round"; ctx.strokeStyle = "#111"; ctx.lineWidth = lw;
+  const b0 = -ch * .2, b1 = -ch * .6; // lower body: from the wheel centres up to the window line
+  ctx.beginPath(); // cabin (behind the body)
+  if (type === 1) { ctx.moveTo(-cw * .45, b1); ctx.lineTo(-cw * .43, -ch * .98); ctx.lineTo(cw * .12, -ch * .98); ctx.lineTo(cw * .3, b1); } // SUV / van
+  else if (type === 2) { ctx.moveTo(-cw * .34, b1); ctx.lineTo(-cw * .24, -ch * .96); ctx.lineTo(cw * .02, -ch * .96); ctx.lineTo(cw * .14, b1); } // pickup (short cab)
+  else { ctx.moveTo(-cw * .38, b1); ctx.lineTo(-cw * .22, -ch * .97); ctx.lineTo(cw * .1, -ch * .97); ctx.lineTo(cw * .3, b1); } // sedan
+  ctx.closePath(); ctx.fillStyle = col; ctx.fill(); ctx.stroke();
+  ctx.save(); ctx.clip(); ctx.fillStyle = "#bfe7ff"; ctx.globalAlpha = .95; // windows inset in the cabin
+  ctx.beginPath(); ctx.moveTo(-cw * .5, b1 + lw); ctx.lineTo(-cw * .5, -ch * .9); ctx.lineTo(cw * .5, -ch * .9); ctx.lineTo(cw * .5, b1 + lw); ctx.closePath(); ctx.fill();
+  ctx.globalAlpha = 1; ctx.fillStyle = col; ctx.fillRect(-cw * .09, -ch, cw * .06, ch * .5); ctx.fillStyle = "rgba(255,255,255,.55)"; ctx.fillRect(-cw * .02, -ch * .88, cw * .03, ch * .22); ctx.restore();
+  ctx.beginPath(); ctx.roundRect(-cw * .5, b1, cw, b0 - b1 + ch * .06, ch * .14); ctx.fillStyle = col; ctx.fill(); ctx.stroke(); // body
+  ctx.fillStyle = "rgba(255,255,255,.22)"; ctx.fillRect(-cw * .44, b1 + ch * .07, cw * .88, ch * .06); // shine
+  ctx.fillStyle = "#fde047"; ctx.beginPath(); ctx.roundRect(cw * .4, b1 + ch * .08, cw * .09, ch * .1, ch * .03); ctx.fill(); // headlight
+  ctx.fillStyle = "#ef4444"; ctx.fillRect(-cw * .5 + lw * .5, b1 + ch * .08, cw * .05, ch * .1); // tail light
+  [-cw * .3, cw * .29].forEach(wx => { ctx.beginPath(); ctx.arc(wx, wy, wr, 0, 7); ctx.fillStyle = "#151515"; ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.arc(wx, wy, wr * .45, 0, 7); ctx.fillStyle = "#cbd5e1"; ctx.fill(); });
+  ctx.restore();
+}
+function drawCarPile(g, item, o) { // g: {cx,h,floor}; rows o.rows (default pileRows), draws rows [o.from, o.to) shifted up by o.lift
+  const R = o.rows || pileRows(item), u = Math.max(1, g.h / R), cw = u * CAR_AR, from = o.from || 0, to = Math.min(R, o.to ?? R), seed = (item.code || "XX").charCodeAt(0) * 31 + (item.code || "XX").charCodeAt(1);
+  ctx.save();
+  if (from === 0 && !o.lift) { ctx.fillStyle = "rgba(0,0,0,.28)"; ctx.beginPath(); ctx.ellipse(g.cx, g.floor + Math.max(3, u * .12), cw * PILE_C * .62, Math.max(4, u * .3), 0, 0, 7); ctx.fill(); }
+  for (let r = from; r < to; r++) {
+    const yb = g.floor - r * u - (o.lift || 0), sh = (r % 2 ? 1 : -1) * cw * .14 * rnd3(seed, r, 9);
+    for (let c = 0; c < PILE_C; c++) {
+      const q = rnd3(seed, r, c), q2 = rnd3(seed + 7, r, c), x = g.cx + (c - (PILE_C - 1) / 2) * cw * .97 + sh + (q - .5) * cw * .08;
+      drawCar(x, yb, cw * .95, u, CAR_COLS[Math.floor(q * 997) % CAR_COLS.length], Math.floor(q2 * 3), q2 > .5 ? 1 : -1, (q - .5) * .09);
+    }
+  }
+  ctx.restore();
+}
+function pileBallR(g, item, cars, R) { return cars ? (g.h / (R || pileRows(item))) * CAR_AR * .82 : Math.max(10, g.w * .42); }
+function drawPileBall(x, seatY, r, item, o) { // countryball sitting on (x, seatY)
+  const f = flags[item.code];
+  CountryballEngine.drawCountryball(ctx, { x, groundY: seatY, radius: Math.max(6, r), flagImg: f && f.ok ? f.im : null, fallbackColor: (item.m && item.m.col) || "#475569", emotion: o.emo || CountryballEngine.getDefaultEmotion(item.rank), isMystery: !!o.mystery, hasCrown: !!o.crown, dropProgress: o.dp ?? 1, time: o.t || 0, lookDir: o.look || 0 });
+}
+function pillW(txt, size, code) { font(size, 900); return ctx.measureText(txt).width + (code ? size * 1.9 : 0) + size * 1.2; }
 function drawStack2Frame(t) {
   if (!texReady) { buildTextures(); texReady = true; }
-  const { cfg, items, intro, per } = S, n = items.length, kind = stackKind(cfg), PRT = PORT;
+  const BS = curMode() === "ballstack", CE = CountryballEngine;
+  const { cfg, items, intro, per } = S, n = items.length, kind = BS ? pileKind(cfg) : stackKind(cfg), CARS = BS && kind === "cars", PRT = PORT;
   const ci = ciAt(t), inOut = ci >= n, live = ci >= 0 && !inOut;
   const tau0 = live ? t - intro - S.st[ci] : 0, ps = live ? S.pause[ci] : 0, tau = Math.max(0, tau0 - ps), inPause = live && tau0 < ps;
   const pc = live ? S.dur[ci] - ps : per, to = inOut ? t - (intro + S.itemsT) : 0, quick = S.outMode !== "full", TL = quick ? 1 : 1.4;
   const board = inOut && !(S.outMode === "full" && cfg.outro), T = inOut ? eout(seg(to, 0, TL)) : 0;
   ctx.save(); ctx.globalAlpha = 1; ctx.shadowBlur = 0; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
-  const hz = H * (PRT ? .48 : .44), baseY = H * (PRT ? .77 : .76), topLimit = PRT ? 430 : 250, maxH = baseY - topLimit;
+  const hz = H * (PRT ? .48 : .44), baseY = H * (PRT ? .77 : .76), topLimit = (PRT ? 430 : 250) + (BS ? pileAllow() : 0), maxH = baseY - topLimit;
   const cc = Math.min(Math.max(ci, 0), n - 1), active = items[cc];
   // tower geometry (same layout as v1; the current tower is built layer by layer)
   const G = Math.max(pc * .7, pc - .7), camT = Math.min(.45 * pc, 1.2), p = inOut ? 1 : Math.pow(clamp(tau / G), S2POW), cam = inOut ? 1 : easeIO(tau0 / camT);
   const one = live && active.rank === 1 && s2Breaks(), Kb = 1.55, K = one ? (inPause ? 1 : lerp2(1, Kb, eout(clamp(tau / G)))) : inOut && s2Breaks() ? lerp2(Kb, 1, T) : 1; // #1: the whole scene grows past the top of the frame
-  const maxHe = maxH * K, outH = board ? (PRT ? baseY - 900 : maxH) : maxH;
-  const baseW = PRT ? Math.min(195, W * .28) : Math.min(235, W * .165), stepX = baseW * 1.42, anchorX = W * (PRT ? .56 : .62);
+  const maxHe = maxH * K, outH = board ? (PRT ? baseY - 900 - (BS ? 70 : 0) : maxH) : maxH;
+  const baseW = BS ? pileBaseW() : PRT ? Math.min(195, W * .28) : Math.min(235, W * .165), stepX = baseW * 1.42, anchorX = W * (PRT ? .56 : .62);
   const towers = [];
   if (ci >= 0) {
     const aS = mscale(active.value, cfg), pS = cc > 0 ? mscale(items[cc - 1].value, cfg) : aS * .4;
@@ -974,8 +1030,16 @@ function drawStack2Frame(t) {
   }
   // camera tilt: keep the top of the tallest tower in view (only #1 goes that high)
   const pLag = inOut ? 1 : Math.pow(clamp((tau - .32) / G), S2POW); // the camera lags ~0.3 s behind the growing top
-  const tops = towers.map(o => o.gm.floor - o.gm.h * (o.cur ? pLag : 1)), ty = Math.max(0, (PRT ? 470 : 280) - Math.min(9999, ...tops));
+  towers.forEach(o => { o.bx = BS && CARS ? o.gm.cx : o.gm.cx + o.gm.w * .17; o.br = BS ? pileBallR(o.gm, o.it, CARS) : 0; }); // ballstack: where the ball sits and how big it is
+  const tops = towers.map(o => o.gm.floor - o.gm.h * (o.cur ? pLag : 1) - (BS ? 2 * o.br + 14 + (o.it.rank === 1 ? o.br * .5 : 0) : 0)), ty = Math.max(0, (PRT ? 470 : 280) - Math.min(9999, ...tops));
   const land = one ? tau - G : -1, shake = land >= 0 && land < .5 ? (1 - land / .5) : 0, sx = Math.sin(t * 70) * 12 * shake, sy = Math.cos(t * 63) * 9 * shake;
+  if (BS) { // cartoon sky; the ground drops away as the camera looks up
+    const th = ballTheme(), t3k = items.findIndex(x => x.rank <= 3), t3 = t3k < 0 ? 1e9 : intro + S.st[t3k], scroll = ci >= 0 ? (Math.max(0, cc - 1) + (inOut ? 1 : cam)) * stepX : 0;
+    const aSun = th === "sunset_drama" ? 1 : th === "auto" ? Math.max(cfg.hook !== false ? 1 - seg(t, intro - .05, intro + .45) : 0, eout(seg(t, t3, t3 + .6))) : 0;
+    CE.drawCartoonBackdrop(ctx, W, H, th === "studio_dark" ? "studio_dark" : "comic_sky", scroll, baseY + ty + sy);
+    if (aSun > .001) { ctx.save(); ctx.globalAlpha = aSun; CE.drawCartoonBackdrop(ctx, W, H, "sunset_drama", scroll, baseY + ty + sy); ctx.restore(); }
+    ctx.save(); ctx.translate(sx, ty + sy);
+  } else {
   // backdrop: sky fixed, floor grid moves with the camera
   let g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#020409"); g.addColorStop(.45, "#090f1d"); g.addColorStop(1, "#05070e"); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   ctx.save(); ctx.translate(sx, ty + sy);
@@ -983,17 +1047,33 @@ function drawStack2Frame(t) {
   for (let i = -8; i <= 24; i++) { ctx.beginPath(); ctx.moveTo(W * .15 + i * W * .04, hz); ctx.lineTo(i * W * .12, H); ctx.stroke(); }
   for (let r = 0; r <= 8; r++) { const ry = hz + Math.pow(r / 8, 1.55) * (H - hz); ctx.beginPath(); ctx.moveTo(0, ry); ctx.lineTo(W, ry); ctx.stroke(); }
   ctx.save(); ctx.strokeStyle = "rgba(148,163,184,.14)"; ctx.setLineDash([6, 6]); [.25, .5, .75, 1].forEach(f => { const ly = baseY - maxHe * f; ctx.beginPath(); ctx.moveTo(24, ly); ctx.lineTo(W - 24, ly); ctx.stroke(); }); ctx.restore();
+  }
   if (live && active.rank === 1 && !inPause) { const ge = eout(clamp(tau / .7)), gx = W * (PRT ? .56 : .62), gy = baseY - maxHe * .45, gr = Math.max(W, H) * .8, gg = ctx.createRadialGradient(gx, gy, 0, gx, gy, gr);
     gg.addColorStop(0, "rgba(255,200,40," + (.34 * ge) + ")"); gg.addColorStop(.5, "rgba(255,170,30," + (.12 * ge) + ")"); gg.addColorStop(1, "rgba(255,170,30,0)"); ctx.fillStyle = gg; ctx.fillRect(0, -ty - 40, W, H + 80); }
   const hl = new Set(S.hl);
-  towers.forEach(({ it, i, cur, gm }) => {
+  const one1 = items.slice(0, cc + 1).some(x => x.rank === 1) && !(live && inPause); // #1 is on screen: #2 looks over in shock
+  towers.forEach(o => {
+    const { it, i, cur, gm } = o;
     if (inOut && hl.has(it.m)) { ctx.save(); ctx.shadowColor = "#fff"; ctx.shadowBlur = 24; }
-    if (!cur) drawTower(gm, it, { kind, cfg, cur: inOut && hl.has(it.m), grow: 1, val: it.value, t, label: null, card: false, badge: null, noBadge: false });
+    const TW = (g2, oo) => CARS ? drawCarPile(g2, it, oo) : drawTower(g2, it, oo);
+    let seat = gm.floor - gm.h; // ballstack: top of the pile
+    if (!cur) TW(gm, { kind, cfg, cur: inOut && hl.has(it.m), grow: 1, val: it.value, t, label: null, card: false, badge: null, noBadge: BS });
     else { // settled layers + the next layer dropping in
-      const N = s2Layers(it), done = Math.min(N, Math.floor(p * N)), frac = p * N - done, lh = gm.h / N;
-      if (done > 0) { ctx.save(); if (it.rank === 1 && done === N) { ctx.shadowColor = "#FFD23F"; ctx.shadowBlur = 30 + 10 * Math.sin(t * 6); } drawTower({ ...gm, h: lh * done }, it, { kind, cfg, cur: true, grow: 1, val: it.value, t, label: null, card: false, badge: null }); ctx.restore(); }
-      if (done < N) { const drop = Math.min(PRT ? 340 : 260, maxH * .45) * (1 - frac * frac); ctx.save(); ctx.globalAlpha = clamp(frac * 4);
-        drawTower({ ...gm, h: lh, floor: gm.floor - lh * done - drop }, it, { kind, cfg, cur: true, grow: 1, val: it.value, t, label: null, card: false, badge: null, noBadge: true }); ctx.restore(); }
+      const N = CARS ? pileRows(it) : s2Layers(it), done = Math.min(N, Math.floor(p * N)), frac = p * N - done, lh = gm.h / N;
+      if (CARS) { // settled rows, the next row falls in behind the ball, the ball rides the top of the pile
+        if (done > 0) { ctx.save(); if (it.rank === 1 && done === N) { ctx.shadowColor = "#FFD23F"; ctx.shadowBlur = 30 + 10 * Math.sin(t * 6); } drawCarPile(gm, it, { rows: N, to: done }); ctx.restore(); }
+        if (done < N) { const drop = Math.min(PRT ? 340 : 260, maxH * .45) * (1 - frac * frac); ctx.save(); ctx.globalAlpha = clamp(frac * 4); drawCarPile(gm, it, { rows: N, from: done, to: done + 1, lift: drop }); ctx.restore(); }
+        seat = gm.floor - gm.h * p;
+      } else {
+        if (done > 0) { ctx.save(); if (it.rank === 1 && done === N) { ctx.shadowColor = "#FFD23F"; ctx.shadowBlur = 30 + 10 * Math.sin(t * 6); } drawTower({ ...gm, h: lh * done }, it, { kind, cfg, cur: true, grow: 1, val: it.value, t, label: null, card: false, badge: null, noBadge: BS }); ctx.restore(); }
+        if (done < N) { const drop = Math.min(PRT ? 340 : 260, maxH * .45) * (1 - frac * frac); ctx.save(); ctx.globalAlpha = clamp(frac * 4);
+          drawTower({ ...gm, h: lh, floor: gm.floor - lh * done - drop }, it, { kind, cfg, cur: true, grow: 1, val: it.value, t, label: null, card: false, badge: null, noBadge: true }); ctx.restore(); }
+        seat = gm.floor - lh * done;
+      }
+    }
+    if (BS) { // the countryball sitting on top (on the roof of a 3D tower: a little to the back)
+      const by = CARS ? seat + 2 : seat - gm.w * .11, landed = cur ? clamp((tau - G) / .45) : 1, sh = it.rank === 2 && one1;
+      drawPileBall(o.bx, by, o.br, it, { t: t + i * .37, crown: it.rank === 1 && (!cur || landed > 0), dp: cur && landed > 0 && landed < 1 ? .78 + .22 * landed : 1, emo: sh ? "shocked" : null, look: sh ? 1 : 0 });
     }
     if (inOut && hl.has(it.m)) ctx.restore();
   });
@@ -1007,19 +1087,21 @@ function drawStack2Frame(t) {
   });
   ctx.restore(); // camera
   // the current country's name, pinned above its tower top (screen space, never under the header)
-  if (live && !inPause) { const o = towers.find(o => o.cur); if (o) { const topY = o.gm.floor - o.gm.h * p - o.gm.w * .22 + ty + sy, y = Math.max(PRT ? 400 : 255, topY - sz * 1.1), a = eout(seg(tau, 0, .25));
-    ctx.save(); ctx.globalAlpha = a; const sc = 1 + .12 * Math.sin(Math.PI * seg(tau, 0, .3)); ctx.translate(o.gm.cx + o.gm.w * .17 + sx, y); ctx.scale(sc, sc);
-    pill2("#" + active.rank + "  " + active.name, 0, 0, active.rank === 1 ? sz * 1.15 : sz, active.rank === 1 ? "#FFD23F" : "#f59e0b", "#fff", "#0b1020", active.code); ctx.restore(); } }
+  if (live && !inPause) { const o = towers.find(o => o.cur); if (o) { const topY = o.gm.floor - o.gm.h * p - (BS ? 2 * o.br + (CARS ? 0 : o.gm.w * .11) + (active.rank === 1 ? o.br * .45 : 0) : o.gm.w * .22) + ty + sy, y = Math.max(PRT ? 400 : 255, topY - sz * 1.1), a = eout(seg(tau, 0, .25));
+    const ptxt = "#" + active.rank + "  " + active.name, psz = active.rank === 1 ? sz * 1.15 : sz, pw = pillW(ptxt, psz, active.code), px = clamp(o.bx + sx, pw / 2 + 10, W - pw / 2 - 10); // keep the whole pill on screen
+    ctx.save(); ctx.globalAlpha = a; const sc = 1 + .12 * Math.sin(Math.PI * seg(tau, 0, .3)); ctx.translate(px, y); ctx.scale(sc, sc); ctx.translate(-px, -y);
+    pill2(ptxt, px, y, psz, active.rank === 1 ? "#FFD23F" : "#f59e0b", "#fff", "#0b1020", active.code); ctx.restore(); } }
   // header: title, counting value, the "2.2x Vietnam" comparison
-  ctx.textAlign = "left"; ctx.fillStyle = "#fbbf24"; fit(String(cfg.title || "").toUpperCase(), PRT ? 22 : 22, 800, W - 90); ctx.fillText(String(cfg.title || "").toUpperCase(), PRT ? 34 : 46, 36);
+  const FT = (s, x, y) => { if (BS) { ctx.save(); ctx.shadowBlur = 0; ctx.lineJoin = "round"; ctx.lineWidth = Math.max(5, parseInt(ctx.font.replace(/^\d+\s*/, "")) * .16); ctx.strokeStyle = "rgba(10,14,28,.92)"; ctx.strokeText(s, x, y); ctx.restore(); } ctx.fillText(s, x, y); }; // ballstack: outlined type on the bright sky
+  ctx.textAlign = "left"; ctx.fillStyle = "#fbbf24"; fit(String(cfg.title || "").toUpperCase(), PRT ? (BS ? 28 : 22) : (BS ? 26 : 22), BS ? 900 : 800, W - 90); FT(String(cfg.title || "").toUpperCase(), PRT ? 34 : 46, BS ? 40 : 36);
   if (ci >= 0 && !board) { const liveVal = active.value * (inOut ? 1 : inPause ? 0 : p), cx0 = PRT ? 34 : 46;
-    const vs = inPause ? "???" : full(liveVal); ctx.save(); ctx.shadowColor = "rgba(255,255,255,.35)"; ctx.shadowBlur = 18; ctx.fillStyle = inPause ? "#FFD23F" : "#fff"; fit(vs, PRT ? 60 : 66, 900, W - 90); ctx.fillText(vs, cx0, PRT ? 112 : 112);
-    ctx.shadowBlur = 0; ctx.fillStyle = "#e2e8f0"; if (cfg.unit) { fit(cfg.unit, PRT ? 30 : 30, 800, W - 90); ctx.fillText(cfg.unit, cx0 + 4, PRT ? 156 : 154); } ctx.restore();
+    const vs = inPause ? "???" : full(liveVal); ctx.save(); ctx.shadowColor = "rgba(255,255,255,.35)"; ctx.shadowBlur = 18; ctx.fillStyle = inPause ? "#FFD23F" : "#fff"; fit(vs, PRT ? 60 : 66, 900, W - 90); FT(vs, cx0, PRT ? 112 : 112);
+    ctx.shadowBlur = 0; ctx.fillStyle = BS ? "#fff" : "#e2e8f0"; if (cfg.unit) { fit(cfg.unit, PRT ? 30 : 30, BS ? 900 : 800, W - 90); FT(cfg.unit, cx0 + 4, PRT ? 156 : 154); } ctx.restore();
     if (live && !inPause && cc > 0 && p > .45) { const pv = items[cc - 1]; if (pv.value > 0 && active.value > pv.value * 1.15) { const b = (active.value / pv.value).toFixed(1).replace(/\.0$/, "") + "x " + pv.name;
-      ctx.save(); ctx.globalAlpha = eout(seg(p, .45, .7)); font(PRT ? 34 : 30, 900); const bw = ctx.measureText(b).width + 40; ctx.translate(cx0 + bw / 2, PRT ? 212 : 205); ctx.scale(1 + .1 * Math.sin(Math.PI * seg(p, .45, .65)), 1 + .1 * Math.sin(Math.PI * seg(p, .45, .65)));
-      pill2(b, 0, 0, PRT ? 34 : 30, "rgba(8,47,73,.95)", "#38bdf8", "#7dd3fc", pv.code); ctx.restore(); } } }
+      ctx.save(); ctx.globalAlpha = eout(seg(p, .45, .7)); font(PRT ? 34 : 30, 900); const bw = ctx.measureText(b).width + 40; const bxc = cx0 + pillW(b, PRT ? 34 : 30, pv.code) / 2, byc = PRT ? 212 : 205; ctx.translate(bxc, byc); ctx.scale(1 + .1 * Math.sin(Math.PI * seg(p, .45, .65)), 1 + .1 * Math.sin(Math.PI * seg(p, .45, .65))); ctx.translate(-bxc, -byc);
+      pill2(b, bxc, byc, PRT ? 34 : 30, "rgba(8,47,73,.95)", "#38bdf8", "#7dd3fc", pv.code); ctx.restore(); } } }
   if (ci < 0 && cfg.hook !== false) drawHook2(t);
-  if (cfg.source) { ctx.fillStyle = "rgba(148,163,184,.75)"; fit(cfg.source, PRT ? 17 : 15, 500, W - 60); ctx.textAlign = "left"; ctx.fillText(cfg.source, 28, H - 20); }
+  if (cfg.source) { ctx.fillStyle = BS ? "rgba(255,255,255,.92)" : "rgba(148,163,184,.75)"; fit(cfg.source, PRT ? 17 : 15, BS ? 600 : 500, W - 60); ctx.textAlign = "left"; if (BS) { ctx.save(); ctx.lineJoin = "round"; ctx.lineWidth = 4; ctx.strokeStyle = "rgba(0,0,0,.55)"; ctx.strokeText(cfg.source, 28, H - 20); ctx.restore(); } ctx.fillText(cfg.source, 28, H - 20); }
   // final board: the whole ranking in type you can read (and screenshot)
   if (board && to > TL * .5) {
     const m = Math.min(n, 10), rows = items.slice().sort((a, b) => a.rank - b.rank).slice(0, m), bx = PRT ? 40 : 40, bwid = PRT ? W - 80 : 560, by = PRT ? 200 : 180, rh = PRT ? Math.min(64, 640 / m) : Math.min(68, 780 / m), fs = rh * .46;
@@ -1150,7 +1232,7 @@ function quizOf(cfg, sorted) { // cfg.quiz: true (auto: #1 + two runners-up) or 
   const one = sorted[0], find = v => { const k = String(v).trim(), u = k.toUpperCase(), l = k.toLowerCase(); return sorted.find(x => x.code === u || String(x.name).toLowerCase() === l); };
   let opts;
   if (Array.isArray(cfg.quiz)) opts = cfg.quiz.slice(0, 4).map(v => { const x = find(v); return x ? { name: x.name, code: x.code } : { name: String(v), code: /^[A-Z]{2}$/.test(String(v)) ? String(v) : "" }; });
-  else { const md = curMode(cfg), podium = cfg.hook !== false && (md === "stack" || md === "stack2" || md === "split" || md === "ball") && sorted.length >= 5; // the podium already shows #2 and #3
+  else { const md = curMode(cfg), podium = cfg.hook !== false && (md === "stack" || md === "stack2" || md === "ballstack" || md === "split" || md === "ball") && sorted.length >= 5; // the podium already shows #2 and #3
     const pool = (podium ? sorted.slice(3, 5) : sorted.slice(1, 3)).map(x => ({ name: x.name, code: x.code })), at = String(cfg.title || "").length % 3; opts = pool.slice(); opts.splice(Math.min(at, opts.length), 0, { name: one.name, code: one.code }); }
   if (!opts.some(o => o.code === one.code || o.name === one.name)) opts[opts.length - 1] = { name: one.name, code: one.code };
   return { opts, answer: opts.findIndex(o => o.code === one.code || o.name === one.name), title: String(cfg.quizTitle || "WHO IS #1?"), cta: String(cfg.quizCta || "Comment A, B or C") };
@@ -1192,7 +1274,7 @@ function extras(t) {
   const rs = S.raceStops, since = it => { const j = items.indexOf(it); return rs ? (j >= 0 ? t - intro - rs[j] : -1) : live && items[ci] === it ? tau : -1; };
   const one = items.find(x => x.rank === 1), tq = one ? since(one) : -1;
   if (qz && tq > .1 && tq < 2.4) { // the answer to the opening quiz
-    const v2 = curMode() === "stack2", a = eout(seg(tq, .1, .4)) * (1 - seg(tq, 2, 2.4)), o = qz.opts[qz.answer], y = (v2 ? (PORT ? 300 : 290) : PORT ? 330 : 210) + (S.spot && S.spot.item === one ? (PORT ? 110 : 90) : 0), bxq = v2 && !PORT ? W * .27 : W / 2;
+    const v2 = curMode() === "stack2" || curMode() === "ballstack", a = eout(seg(tq, .1, .4)) * (1 - seg(tq, 2, 2.4)), o = qz.opts[qz.answer], y = (v2 ? (PORT ? 300 : 290) : PORT ? 330 : 210) + (S.spot && S.spot.item === one ? (PORT ? 110 : 90) : 0), bxq = v2 && !PORT ? W * .27 : W / 2;
     const sc = 1 + .1 * Math.sin(Math.PI * seg(tq, .1, .45)); ctx.globalAlpha = a; ctx.translate(bxq, y); ctx.scale(sc, sc); ctx.translate(-bxq, -y);
     ctx.shadowColor = "#22c55e"; ctx.shadowBlur = 26; chip("✓ ANSWER " + String.fromCharCode(65 + qz.answer) + ": " + o.name.toUpperCase(), bxq, y, PORT ? 46 : 38, "#16a34a", "#bbf7d0", "#fff"); ctx.shadowBlur = 0;
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1;
@@ -1213,7 +1295,7 @@ function extras(t) {
   const sp = S.spot;
   const ts = sp && sp.item ? since(sp.item) : -1, tsEnd = rs ? 1.8 : pc;
   if (sp && sp.item && ts > 0 && ts < tsEnd) {
-    const v2 = curMode() === "stack2", a = eout(seg(ts, .05, .3)) * (1 - seg(ts, tsEnd - .2, tsEnd)), y = v2 ? (PORT ? 300 : 290) : PORT ? 330 : 210, sc = 1 + .12 * Math.sin(Math.PI * seg(ts, .05, .4)), bxs = v2 && !PORT ? W * .27 : W / 2;
+    const v2 = curMode() === "stack2" || curMode() === "ballstack", a = eout(seg(ts, .05, .3)) * (1 - seg(ts, tsEnd - .2, tsEnd)), y = v2 ? (PORT ? 300 : 290) : PORT ? 330 : 210, sc = 1 + .12 * Math.sin(Math.PI * seg(ts, .05, .4)), bxs = v2 && !PORT ? W * .27 : W / 2;
     const txt = (sp.say || sp.name + " is #" + sp.rank + "!").toUpperCase();
     ctx.globalAlpha = a; ctx.translate(bxs, y); ctx.scale(sc, sc); ctx.translate(-bxs, -y);
     ctx.shadowColor = "#f43f5e"; ctx.shadowBlur = 28; chip(txt, bxs, y, PORT ? 50 : 40, "#e11d48", "#fff", "#fff"); ctx.shadowBlur = 0;
@@ -1249,7 +1331,7 @@ function overlays(t) {
   const f = S.outMode === "loop" || S.noFade ? 0 : seg(t, total - .5, total); if (f > 0) { ctx.globalAlpha = f; ctx.fillStyle = "#05070F"; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1; }
 }
 function draw(t) {
-  { const md = curMode(); if (md === "ball") { drawBallFrame(t); overlays(t); return; } if (md === "globe") { drawGlobeFrame(t); overlays(t); return; } if (md === "race") { drawRaceFrame(t); overlays(t); return; } if (md === "stack2") { drawStack2Frame(t); overlays(t); return; } if (md !== "map" && md !== "bubble") { drawStackFrame(t, md); overlays(t); return; } }
+  { const md = curMode(); if (md === "ball") { drawBallFrame(t); overlays(t); return; } if (md === "globe") { drawGlobeFrame(t); overlays(t); return; } if (md === "race") { drawRaceFrame(t); overlays(t); return; } if (md === "stack2" || md === "ballstack") { drawStack2Frame(t); overlays(t); return; } if (md !== "map" && md !== "bubble") { drawStackFrame(t, md); overlays(t); return; } }
   const { cfg, items, intro, per, total, accent } = S, n = items.length;
   ctx.globalAlpha = 1; ctx.shadowBlur = 0; ctx.textAlign = "left"; ctx.drawImage(base, 0, 0);
   const ci = ciAt(t), inOut = ci >= n;
@@ -1454,12 +1536,12 @@ async function renderTrack() {
   if (S.quiz) { const t0 = 0, p = S.intro;
     for (let k = 0; t0 + .45 + k * .5 < t0 + p - .3; k++) { const tk = t0 + .45 + k * .5, o = oc.createOscillator(), e = oc.createGain(); o.type = "square"; o.frequency.value = k % 2 ? 1500 : 1900;
       e.gain.setValueAtTime(.05, tk); e.gain.exponentialRampToValueAtTime(.0001, tk + .05); o.connect(e).connect(out); o.start(tk); o.stop(tk + .06); } }
-  if (curMode() === "stack2") S.items.forEach((x, i) => { const p0 = S.intro + S.st[i] + S.pause[i], pc = S.dur[i] - S.pause[i], G = Math.max(pc * .7, pc - .7), N = s2Layers(x);
+  if (curMode() === "stack2" || curMode() === "ballstack") S.items.forEach((x, i) => { const p0 = S.intro + S.st[i] + S.pause[i], pc = S.dur[i] - S.pause[i], G = Math.max(pc * .7, pc - .7), N = curMode() === "ballstack" && pileKind(S.cfg) === "cars" ? pileRows(x) : s2Layers(x);
     for (let k = 1; k <= N; k++) { const tk = p0 + G * Math.pow(k / N, 1 / S2POW), o = oc.createOscillator(), e = oc.createGain(); o.type = "triangle"; o.frequency.value = 520 + 900 * k / N;
       e.gain.setValueAtTime(.0001, tk); e.gain.exponentialRampToValueAtTime(.06, tk + .004); e.gain.exponentialRampToValueAtTime(.0001, tk + .06); o.connect(e).connect(out); o.start(tk); o.stop(tk + .08); }
     if (x.rank === 1 && s2Breaks()) { const tb = p0 + G, o = oc.createOscillator(), e = oc.createGain(); o.type = "sine"; o.frequency.setValueAtTime(90, tb); o.frequency.exponentialRampToValueAtTime(34, tb + .7);
       e.gain.setValueAtTime(.0001, tb); e.gain.exponentialRampToValueAtTime(.6, tb + .01); e.gain.exponentialRampToValueAtTime(.0001, tb + 1.1); o.connect(e).connect(out); o.start(tb); o.stop(tb + 1.2); } });
-  if ((curMode() === "globe" || PORT) && !S.raceStops && curMode() !== "stack2") { const gw = curMode() === "globe" ? .16 : .1, nb = oc.createBuffer(1, Math.ceil(.8 * oc.sampleRate), oc.sampleRate), d = nb.getChannelData(0); let z = 12345; for (let i = 0; i < d.length; i++) { z = (z * 1103515245 + 12345) % 2147483648; d[i] = z / 1073741824 - 1; }
+  if ((curMode() === "globe" || PORT) && !S.raceStops && curMode() !== "stack2" && curMode() !== "ballstack") { const gw = curMode() === "globe" ? .16 : .1, nb = oc.createBuffer(1, Math.ceil(.8 * oc.sampleRate), oc.sampleRate), d = nb.getChannelData(0); let z = 12345; for (let i = 0; i < d.length; i++) { z = (z * 1103515245 + 12345) % 2147483648; d[i] = z / 1073741824 - 1; }
     S.items.forEach((x, i) => { const t0 = S.intro + S.st[i] + S.pause[i], b = oc.createBufferSource(), f = oc.createBiquadFilter(), e = oc.createGain(); b.buffer = nb; f.type = "bandpass"; f.Q.value = 1.4;
       f.frequency.setValueAtTime(350, t0); f.frequency.exponentialRampToValueAtTime(2600, t0 + .55); e.gain.setValueAtTime(.0001, t0); e.gain.exponentialRampToValueAtTime(gw, t0 + .22); e.gain.exponentialRampToValueAtTime(.0001, t0 + .75);
       b.connect(f).connect(e).connect(out); b.start(t0); b.stop(t0 + .8); }); }

@@ -1,0 +1,65 @@
+{
+  "title": "The 10 Biggest Car Producers",
+  "mode": "ballstack",
+  "stack": "cars",
+  "hook": "WHO IS #1|IN CARS?",
+  "quiz": true,
+  "unit": "vehicles built",
+  "order": "countdown",
+  "color": "#F472B6",
+  "source": "Data: OICA 2025, all vehicles (Germany: cars only; France: cars + light vans only)",
+  "question": "Is your country in the top 10? Tell us below",
+  "countries": [
+    {
+      "code": "CN",
+      "name": "China",
+      "value": 34530738,
+      "fact": "Builds about 1 in 3 vehicles on Earth"
+    },
+    {
+      "code": "US",
+      "name": "United States",
+      "value": 10243844
+    },
+    {
+      "code": "JP",
+      "name": "Japan",
+      "value": 8410232
+    },
+    {
+      "code": "IN",
+      "name": "India",
+      "value": 6490810
+    },
+    {
+      "code": "DE",
+      "name": "Germany",
+      "value": 4148836
+    },
+    {
+      "code": "KR",
+      "name": "South Korea",
+      "value": 4102200
+    },
+    {
+      "code": "MX",
+      "name": "Mexico",
+      "value": 4092448
+    },
+    {
+      "code": "BR",
+      "name": "Brazil",
+      "value": 2644054
+    },
+    {
+      "code": "ES",
+      "name": "Spain",
+      "value": 2274026
+    },
+    {
+      "code": "FR",
+      "name": "France",
+      "value": 1463991
+    }
+  ]
+}

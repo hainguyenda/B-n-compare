@@ -26,6 +26,7 @@ Nên dùng `"mode": "stack"` cho Shorts. Ví dụ: `examples/short-ca-phe.json`.
 | `map` | Bản đồ phẳng, nước lần lượt sáng lên |
 | `stack` | Cột 3D to dần |
 | `stack2` | Cột 3D v2: chữ to đọc được trên điện thoại; cột được xếp từng khối rơi xuống (tiếng "cạch" dồn dập dần); #1 vọt quá mép trên rồi máy quay ngước theo, rung khi chạm đỉnh; kết bằng bảng xếp hạng to có cờ và số. Bản `stack` giữ nguyên để so sánh. Ví dụ: `examples/short-ca-phe-v2.json` |
+| `ballstack` | Countryball ngồi trên đỉnh một đống, chạy giống `stack2` (từng tầng rơi xuống, #1 vọt quá mép trên, bảng tổng kết). `"stack": "cars"` là đống xe hơi hoạt hình (xe sedan, SUV, bán tải nhiều màu); bóng nhún lên theo đống, #1 đội vương miện, #2 tròn mắt khi #1 hiện ra. Chất liệu khác thì bóng ngồi trên nóc cột 3D. Nền trời hoạt hình theo ô **Nền bóng**. Ví dụ: `examples/short-o-to-ballstack.json` |
 | `split` | Cột 3D kèm bản đồ nhỏ |
 | `ball` | Countryball nhí nhảnh |
 | `globe` | Quả địa cầu xoay tới từng nước, cột sáng cao theo giá trị, tiếng vút mỗi lần xoay |
