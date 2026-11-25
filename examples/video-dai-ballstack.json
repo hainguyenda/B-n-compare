@@ -1,0 +1,190 @@
+{
+  "title": "The 30 Biggest Military Spenders in the World",
+  "mode": "ballstack",
+  "subtitle": "Military spending in 2025 (US dollars, SIPRI)",
+  "quiz": true,
+  "unit": "spent on the military",
+  "order": "countdown",
+  "secondsPerCountry": 6.0,
+  "color": "#EF4444",
+  "source": "Data: SIPRI Military Expenditure Database, April 2026 (2025). Singapore (#23, $17.4bn) is not shown",
+  "prefix": "$",
+  "spotlight": {
+    "code": "VN",
+    "rank": 32,
+    "value": 10500000000
+  },
+  "countries": [
+    {
+      "code": "US",
+      "name": "United States",
+      "value": 954000000000,
+      "fact": "About a third of all military spending on Earth"
+    },
+    {
+      "code": "CN",
+      "name": "China",
+      "value": 336000000000,
+      "fact": "Spending rose 7.4% in 2025"
+    },
+    {
+      "code": "RU",
+      "name": "Russia",
+      "value": 190000000000,
+      "fact": "Spends 7.5% of its GDP on the military"
+    },
+    {
+      "code": "DE",
+      "name": "Germany",
+      "value": 114000000000,
+      "fact": "Spending jumped 24% in a single year"
+    },
+    {
+      "code": "IN",
+      "name": "India",
+      "value": 92100000000
+    },
+    {
+      "code": "GB",
+      "name": "United Kingdom",
+      "value": 89000000000
+    },
+    {
+      "code": "UA",
+      "name": "Ukraine",
+      "value": 84100000000,
+      "fact": "Spends about 40% of its GDP on defence"
+    },
+    {
+      "code": "SA",
+      "name": "Saudi Arabia",
+      "value": 83200000000
+    },
+    {
+      "code": "FR",
+      "name": "France",
+      "value": 68000000000
+    },
+    {
+      "code": "JP",
+      "name": "Japan",
+      "value": 62200000000
+    },
+    {
+      "code": "IL",
+      "name": "Israel",
+      "value": 48300000000
+    },
+    {
+      "code": "IT",
+      "name": "Italy",
+      "value": 48100000000
+    },
+    {
+      "code": "KR",
+      "name": "South Korea",
+      "value": 47800000000
+    },
+    {
+      "code": "PL",
+      "name": "Poland",
+      "value": 46800000000
+    },
+    {
+      "code": "ES",
+      "name": "Spain",
+      "value": 40200000000
+    },
+    {
+      "code": "CA",
+      "name": "Canada",
+      "value": 37500000000
+    },
+    {
+      "code": "AU",
+      "name": "Australia",
+      "value": 35300000000
+    },
+    {
+      "code": "TR",
+      "name": "Türkiye",
+      "value": 30000000000
+    },
+    {
+      "code": "NL",
+      "name": "Netherlands",
+      "value": 28900000000
+    },
+    {
+      "code": "DZ",
+      "name": "Algeria",
+      "value": 25400000000
+    },
+    {
+      "code": "BR",
+      "name": "Brazil",
+      "value": 23900000000
+    },
+    {
+      "code": "TW",
+      "name": "Taiwan",
+      "value": 18200000000
+    },
+    {
+      "code": "NO",
+      "name": "Norway",
+      "value": 17000000000
+    },
+    {
+      "code": "SE",
+      "name": "Sweden",
+      "value": 16500000000
+    },
+    {
+      "code": "ID",
+      "name": "Indonesia",
+      "value": 15000000000
+    },
+    {
+      "code": "DK",
+      "name": "Denmark",
+      "value": 14900000000
+    },
+    {
+      "code": "BE",
+      "name": "Belgium",
+      "value": 14500000000
+    },
+    {
+      "code": "CO",
+      "name": "Colombia",
+      "value": 14500000000
+    },
+    {
+      "code": "MX",
+      "name": "Mexico",
+      "value": 13600000000
+    },
+    {
+      "code": "PK",
+      "name": "Pakistan",
+      "value": 11900000000
+    }
+  ],
+  "outro": {
+    "big": "$954 billion",
+    "text": "The USA alone spends about a third of the world's military budget.",
+    "cta": "Should your country spend more or less? Tell us below.",
+    "highlight": [
+      "US",
+      "CN",
+      "RU"
+    ]
+  },
+  "endCard": {
+    "channel": "Countries Stacked",
+    "handle": "@CountriesStacked",
+    "text": "Like & subscribe for a new world ranking every week!",
+    "seconds": 3.5
+  }
+}
