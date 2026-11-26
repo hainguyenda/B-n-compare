@@ -66,3 +66,9 @@ Ví dụ:
 ## TikTok
 
 Khung **9:16 · TikTok** vẽ cảnh 9:16 bình thường rồi thu nhỏ 80% vào vùng an toàn (cách trên 150px, trái 64px, chừa cột nút bên phải và phần chú thích bên dưới), nền xung quanh là bản mờ tối của chính cảnh đó; luôn tắt endCard (cảnh Like/Share/Subscribe của YouTube). `"format": "tiktok"` trong code tự chọn khung này khi bấm Chạy (`"shorts"` / `"youtube"` cho hai khung kia).
+
+## Tab 2 — Countryball Showdown
+
+Nút **Countryball Showdown** ở đầu trang mở studio thứ hai (code trong `src/showdown.js`), dùng chung khung xem trước, nhạc nền và bộ xuất MP4 với Tab 1 (Tab 1 không đổi). Code là một danh sách `scenes`:
+`lineup` (dàn hàng xéo, bóng sau trượt ra từ sau bóng trước có motion blur, `eyeDropAt` đổi mắt sang mắt bèn đúng nhịp bass), `stat_battle` (2–5 nước, thanh số chạy, nước thắng sáng vàng, nước thua mắt run và tối đi), `champion` (bóng vô địch trượt vào giữa, tia sáng xoay, phụ kiện `sunglasses` / `cigar` / `trophy` / `crown`, mưa kim tuyến).
+Mắt: `normal`, `serious`, `angry`, `shocked`, `cool`, chuyển mượt trong 120 ms. `bpm`, `beatIntensity`: mỗi nhịp khung hình nhún zoom, rung nhẹ, bóng nhún dẹt. Nhạc tự tạo là beat kiểu phonk đúng bpm; với file nhạc riêng và **Auto Beat-Sync** bật, app dò nhịp bass trong file. Nút "Nạp mẫu ASEAN vs Việt Nam Top 1" có sẵn một video mẫu 13,5 giây.
