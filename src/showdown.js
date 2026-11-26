@@ -6,7 +6,7 @@ const SD = (() => {
     fps: 30, bpm: 128, beatIntensity: 0.8, watermark: "",
     scenes: [
       { type: "lineup", duration: 3.5, title: "ASEAN SHOWDOWN", badge: "ASEAN", align: "right", eyeDropAt: 1.4,
-        members: [{ code: "ID", eyeStart: "normal", eyeEnd: "serious" }, { code: "VN", eyeStart: "normal", eyeEnd: "serious" }, { code: "MY", eyeStart: "normal", eyeEnd: "serious" }, { code: "TH", eyeStart: "normal", eyeEnd: "serious" }, { code: "SG", eyeStart: "normal", eyeEnd: "serious" }] },
+        members: [{ code: "VN", eyeStart: "normal", eyeEnd: "serious" }, { code: "ID", eyeStart: "normal", eyeEnd: "serious" }, { code: "MY", eyeStart: "normal", eyeEnd: "serious" }, { code: "TH", eyeStart: "normal", eyeEnd: "serious" }, { code: "SG", eyeStart: "normal", eyeEnd: "serious" }] },
       { type: "stat_battle", duration: 3.0, category: "COFFEE EXPORTS", unit: "M tons", winner: "VN",
         items: [{ code: "VN", value: 1.65, label: "Vietnam" }, { code: "ID", value: 0.65, label: "Indonesia" }, { code: "LA", value: 0.03, label: "Laos" }, { code: "TH", value: 0.02, label: "Thailand" }] },
       { type: "stat_battle", duration: 3.0, category: "GDP GROWTH RATE", unit: "%", winner: "VN",
