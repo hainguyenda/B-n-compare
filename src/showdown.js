@@ -115,7 +115,7 @@ const SD = (() => {
     ctx.save(); ctx.globalAlpha *= o.alpha ?? 1;
     if (o.glow) { ctx.save(); ctx.shadowColor = o.glow; ctx.shadowBlur = r * .45; blob(x, cy, rx, ry); ctx.fillStyle = o.glow; ctx.fill(); ctx.restore(); }
     blob(x, cy, rx, ry); ctx.save(); ctx.clip();
-    if (f && f.ok) { const fw = rx * 2.5, fh = Math.max(ry * 2.12, fw * (f.ar || .66)), fx = x - fw / 2 - look * rx * .14; ctx.drawImage(f.im, fx, cy - fh / 2, fw, fh); }
+    if (f && f.ok) { const fh = ry * 2.25, fw = Math.max(rx * 2.3, fh / (f.ar || .66)), fx = x - fw / 2 + look * rx * .1; ctx.drawImage(f.im, fx, cy - fh * .5, fw, fh); } // flag centred on the face (keeps its proportions), nudged the way the ball looks
     else { ctx.fillStyle = FCOL[o.code] || "#64748b"; ctx.fillRect(x - rx, cy - ry * 1.4, rx * 2, ry * 2.8); }
     let g = ctx.createRadialGradient(x - look * rx * .35 - rx * .1, cy - ry * .45, rx * .05, x, cy, rx * 1.35); // 3D shading, darker to the bottom and back
     g.addColorStop(0, "rgba(255,255,255,.22)"); g.addColorStop(.42, "rgba(255,255,255,0)"); g.addColorStop(.8, "rgba(0,0,0,.28)"); g.addColorStop(1, "rgba(0,0,0,.62)"); ctx.fillStyle = g; ctx.fillRect(x - rx, cy - ry * 1.4, rx * 2, ry * 2.8);
