@@ -149,7 +149,7 @@ const SD = (() => {
   // ---------- scenes ----------
   function lineup(sc, u, B, t) {
     const n = sc.members.length, P = PT(), right = (sc.align || "right") !== "left", dir = right ? 1 : -1, look = -dir * .55;
-    const R0 = P ? 280 : 230, x0 = right ? W * (P ? .8 : .7) : W * (P ? .2 : .3), xe = right ? W * (P ? .13 : .2) : W * (P ? .87 : .8), gy = H * (P ? .64 : .8);
+    const R0 = P ? 280 : 230, x0 = right ? W * (P ? .69 : .66) : W * (P ? .31 : .34), xe = right ? W * (P ? .1 : .2) : W * (P ? .9 : .8), gy = H * (P ? .64 : .8);
     badge(W / 2, H * (P ? .13 : .14), P ? 118 : 96, sc.badge || "ASEAN", eout(clamp(u / .35)));
     if (sc.title) txt(String(sc.title).toUpperCase(), W / 2, H * (P ? .13 : .14) + (P ? 188 : 148), P ? 64 : 54, "#fff", { glow: "rgba(255,210,63,.35)" });
     for (let i = n - 1; i >= 0; i--) {
