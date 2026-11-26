@@ -110,7 +110,7 @@ const SD = (() => {
   }
   // a countryball standing on (x, y): o = { r, code, E (eye params), look, dark, sq, glow, alpha }
   function ball(x, y, o) {
-    const r = o.r, sq = o.sq || 0, rx = r * 1.08 * (1 + sq * .1), ry = r * (1 - sq * .1), cy = y - ry * .96, look = o.look || 0, f = flags[o.code];
+    const r = o.r, k6 = clamp((o.sq || 0) * .06, -.06, .06), rx = r * 1.08 * (1 + k6), ry = r * (1 - k6), cy = y - ry * .96, look = o.look || 0, f = flags[o.code];
     shadow(x, y + r * .02, rx * 1.05, .6 * (o.alpha ?? 1));
     ctx.save(); ctx.globalAlpha *= o.alpha ?? 1;
     if (o.glow) { ctx.save(); ctx.shadowColor = o.glow; ctx.shadowBlur = r * .45; blob(x, cy, rx, ry); ctx.fillStyle = o.glow; ctx.fill(); ctx.restore(); }
@@ -136,7 +136,7 @@ const SD = (() => {
     ctx.beginPath(); ctx.arc(x, y, R * .86, 0, 7); ctx.fillStyle = "#fff"; ctx.fill();
     const g = ctx.createRadialGradient(x - R * .25, y - R * .3, R * .1, x, y, R * .84); g.addColorStop(0, "#f87171"); g.addColorStop(1, "#dc2626");
     ctx.beginPath(); ctx.arc(x, y, R * .82, 0, 7); ctx.fillStyle = g; ctx.fill();
-    txt(String(label || "").toUpperCase(), x, y + R * .04, R * .42, "#fde047", { stroke: "#1e3a8a", max: R * 1.4 }); ctx.restore();
+    if (label) txt(String(label).toUpperCase(), x, y + R * .04, R * .42, "#fde047", { stroke: "#1e3a8a", max: R * 1.4 }); ctx.restore();
   }
   function background(t, warm = 1) {
     ctx.fillStyle = "#050505"; ctx.fillRect(-40, -40, W + 80, H + 80);
@@ -152,21 +152,26 @@ const SD = (() => {
     const R0 = P ? 280 : 230, x0 = right ? W * (P ? .69 : .66) : W * (P ? .31 : .34), xe = right ? W * (P ? .1 : .2) : W * (P ? .9 : .8), gy = H * (P ? .64 : .8);
     badge(W / 2, H * (P ? .13 : .14), P ? 118 : 96, sc.badge || "ASEAN", eout(clamp(u / .35)));
     if (sc.title) txt(String(sc.title).toUpperCase(), W / 2, H * (P ? .13 : .14) + (P ? 188 : 148), P ? 64 : 54, "#fff", { glow: "rgba(255,210,63,.35)" });
+    // spacing: each ball shows its right eye past the ball in front of it (left edge of the front ball sits ~0.42 r right of the back ball's centre);
+    // if the row is wider than the frame, every ball shrinks to fit
+    const DEC = .78, sz = i => Math.pow(DEC, i); let span = 1.08, off = [0];
+    for (let i = 1; i < n; i++) { off.push(off[i - 1] + 1.08 * (sz(i - 1) * .95 + sz(i) * .45)); } span = 1.08 + off[n - 1] + 1.08 * sz(n - 1);
+    const Rf = Math.min(R0, (P ? W * .97 : W * .8) / span), xs = right ? W - 1.08 * Rf - W * .015 - (P ? 0 : W * .08) : 1.08 * Rf + W * .015 + (P ? 0 : W * .08);
     for (let i = n - 1; i >= 0; i--) {
-      const m = sc.members[i], s = Math.pow(.8, i), r = R0 * s, tx = n > 1 ? lerp(x0, xe, Math.pow(i / (n - 1), .85)) : x0, ty = gy - i * (P ? 40 : 26);
-      const a0 = .12 + i * .1, k = i === 0 ? eout(clamp(u / .3)) : back(clamp((u - a0) / .42)), x = i === 0 ? x0 + dir * (1 - k) * W * .5 : lerp(x0, tx, k);
+      const m = sc.members[i], s = sz(i), r = Rf * s, tx = xs - dir * off[i] * Rf, ty = gy - i * Rf * .16;
+      const a0 = .12 + i * .1, k = i === 0 ? eout(clamp(u / .3)) : back(clamp((u - a0) / .42)), x = i === 0 ? xs + dir * (1 - k) * W * .5 : lerp(xs, tx, k);
       const E = eyeAt(m.eyeStart || "normal", m.eyeEnd || "serious", sc.eyeDropAt ?? 1.4, u);
       const moving = i > 0 && u > a0 && u < a0 + .42; // short motion blur while sliding out
-      if (moving) [.06, .03].forEach((dt, j) => { const k2 = back(clamp((u - dt - a0) / .42)); ctx.save(); ctx.globalAlpha = j ? .25 : .12; ball(lerp(x0, tx, k2), ty, { r, code: m.code, E, look, dark: i * .13, t }); ctx.restore(); });
+      if (moving) [.06, .03].forEach((dt, j) => { const k2 = back(clamp((u - dt - a0) / .42)); ctx.save(); ctx.globalAlpha = j ? .25 : .12; ball(lerp(xs, tx, k2), ty, { r, code: m.code, E, look, dark: i * .13, t }); ctx.restore(); });
       ball(x, ty, { r, code: m.code, E, look, dark: i * .13, sq: B.sq * S.I * (i ? .7 : 1), t });
     }
   }
   function statBattle(sc, u, B, t) {
     const P = PT(), n = sc.items.length, top = H * (P ? .27 : .24), bot = H * (P ? .86 : .9), rh = (bot - top) / Math.max(n, 2), r = Math.min(P ? 135 : 100, rh * .4);
     const reveal = Math.min(sc.d * .55, 1.45), done = u > reveal;
-    txt(String(sc.category || "").toUpperCase(), W / 2, H * (P ? .12 : .1), P ? 78 : 64, "#FFD23F", { glow: "rgba(255,210,63,.5)" });
+    txt(String(sc.category || "").toUpperCase(), W / 2, H * (P ? .12 : .1), P ? 78 : 64, "#FFD23F", { glow: "rgba(255,210,63,.5)", max: W * .8 });
     if (sc.unit) txt(String(sc.unit), W / 2, H * (P ? .12 : .1) + (P ? 84 : 66), P ? 42 : 32, "#e5e7eb", { w: 800 });
-    const bx = P ? 290 : W * .3, bw = W - bx - (P ? 70 : W * .18);
+    const safeR = W * (P ? .88 : .86), bx = P ? 290 : W * .3, vw = P ? 150 : 130, bw = safeR - vw - bx; // Shorts: leave the right 12% clear for the Like/Comment buttons
     sc.items.forEach((it, i) => {
       const y = top + rh * (i + .62), a = eout(clamp((u - .05 - i * .08) / .3)), win = it.code === sc.win, xo = (1 - a) * W * .6;
       const p = eout(clamp((u - .25 - i * .05) / (reveal - .25))), dim = done && !win ? .5 : 0;
@@ -178,8 +183,8 @@ const SD = (() => {
       const g = ctx.createLinearGradient(bx, 0, bx + bwv, 0); g.addColorStop(0, win ? "#f59e0b" : "#475569"); g.addColorStop(1, win ? "#fde047" : "#94a3b8");
       ctx.save(); if (win && done) { ctx.shadowColor = "#FFD23F"; ctx.shadowBlur = 30 + 20 * B.e; } ctx.fillStyle = g; ctx.beginPath(); ctx.roundRect(bx, by, bwv, bh, bh / 2); ctx.fill(); ctx.restore();
       ctx.lineWidth = 4; ctx.strokeStyle = "#000"; ctx.beginPath(); ctx.roundRect(bx, by, bwv, bh, bh / 2); ctx.stroke();
-      const vs = v.toFixed(sc.dec) + (sc.unit === "%" ? "%" : ""), vx = Math.min(bx + bwv + 14, W - 24);
-      txt(vs, vx, by + bh / 2, P ? 52 : 40, win && done ? "#FFD23F" : "#fff", { align: vx > W - 140 ? "right" : "left", w: 900 });
+      const vs = v.toFixed(sc.dec) + (sc.unit === "%" ? "%" : ""), vx = bx + bwv + 16;
+      txt(vs, vx, by + bh / 2, P ? 50 : 40, win && done ? "#FFD23F" : "#fff", { align: "left", w: 900, max: safeR - vx });
       if (dim) { ctx.fillStyle = "rgba(5,5,5," + dim * .6 + ")"; ctx.fillRect(bx, by - 2, bw + 10, bh + 4); }
       if (win && done) { const k = back(clamp((u - reveal) / .3)); ctx.save(); ctx.translate(bx - r * 1.25, y + r * .9 - r * 2.25); ctx.scale(k, k); txt("#1", 0, 0, P ? 52 : 44, "#FFD23F", { glow: "rgba(255,210,63,.8)" }); ctx.restore(); }
       ctx.restore();
@@ -217,9 +222,10 @@ const SD = (() => {
       const px = tx + Math.sin(q * 5 + s0 * 6) * r * .18 * q + q * r * .15, py = ty - q * r * 1.6, rr = r * (.05 + .2 * q);
       ctx.fillStyle = "rgba(225,225,225," + (.4 * (1 - q) * a) + ")"; ctx.beginPath(); ctx.arc(px, py, rr, 0, 7); ctx.fill(); } }
   function champion(sc, u, B, t) {
-    const P = PT(), r = P ? 300 : 230, gy = H * (P ? .66 : .74), k = back(clamp(u / .38)), x = W / 2 + (P ? 0 : -W * .06), y = gy + (1 - k) * H * .6, props = sc.props || {};
+    const P = PT(), r = P ? 300 : 230, gy = H * (P ? .6 : .74), k = back(clamp(u / .38)), x = W / 2 + (P ? 0 : -W * .06), y = gy + (1 - k) * H * .6, props = sc.props || {};
     rays(W / 2, gy - r, Math.max(W, H) * .8, eout(clamp(u / .5)) * (.75 + .25 * B.e), t);
-    const hb = eout(clamp((u - .25) / .3)); badge(W / 2, H * (P ? .13 : .14), (P ? 135 : 95) * (1 + .06 * B.e), "#1", hb);
+    const hb = eout(clamp((u - .25) / .3)), bR = (P ? 135 : 95) * (1 + .06 * B.e), bY = H * (P ? .13 : .14); badge(W / 2, bY, bR, "", hb);
+    if (hb > 0) { ctx.save(); ctx.globalAlpha = hb; txt("#1", W / 2, bY + bR * .05, bR * .78, "#FFD23F", { stroke: "#000", glow: "rgba(255,210,63,.6)", max: bR * 1.5 }); crown(W / 2, bY - bR * .92, bR * .34, 0); ctx.restore(); }
     const sgAt = .55, E = props.sunglasses ? (u < sgAt + .3 ? EYES.serious : EYES.serious) : eyeAt("serious", "angry", .9, u);
     const G = ball(x, y, { r, code: sc.code, E, look: 0, sq: B.sq * S.I * 1.4 + (u < .55 ? Math.max(0, Math.sin(clamp((u - .3) / .25) * Math.PI)) * .6 : 0), glow: "rgba(255,200,40," + (.6 + .3 * B.e) + ")", t });
     if (props.crown) { const ck = back(clamp((u - 1.1) / .3)); if (ck > 0) crown(G.cx + r * .25, G.cy - G.ry * .98, r * .32 * ck, .22); }
@@ -227,10 +233,10 @@ const SD = (() => {
       const fl = clamp((u - sgAt - .28) / .35); if (fl > 0 && fl < 1) { star(G.cx - r * .52, G.ey - r * .1, r * .35 * Math.sin(fl * Math.PI), 1); star(G.cx + r * .3, G.ey - r * .12, r * .2 * Math.sin(fl * Math.PI), .8); } }
     if (props.cigar) cigar(G, r, props.sunglasses ? .95 : .5, u);
     if (props.trophy) { const tk = back(clamp((u - 1.2) / .35)); if (tk > 0) { const ts = r * .95 * tk, tx = G.cx + (P ? -r * 1.05 : r * 1.55), ty = gy + 6 - B.e * r * .05 - Math.sin(u * 3) * 6;
-      shadow(tx, gy + 6, ts * .45, .5); trophy(tx, ty, ts, t, (u - 1.2) * .7); for (let i = 0; i < 5; i++) { const q = (u * .9 + i * .21) % 1; star(tx + (h01(i, 7) - .5) * ts * 1.1, ty - ts * (.2 + h01(i, 9) * .9), ts * .09, Math.sin(q * Math.PI)); } } }
+      shadow(tx, gy + 6, ts * .45, .5); ctx.save(); ctx.translate(tx, ty); ctx.rotate(-12 * Math.PI / 180); ctx.shadowColor = "rgba(0,0,0,.85)"; ctx.shadowBlur = ts * .35; ctx.shadowOffsetY = ts * .05; trophy(0, 0, ts, t, (u - 1.2) * .7); ctx.restore(); for (let i = 0; i < 5; i++) { const q = (u * .9 + i * .21) % 1; star(tx + (h01(i, 7) - .5) * ts * 1.1, ty - ts * (.2 + h01(i, 9) * .9), ts * .09, Math.sin(q * Math.PI)); } } }
     const ha = eout(clamp((u - .4) / .3)), hs = 1 + .05 * B.e;
-    if (sc.headline && ha > 0) { ctx.save(); ctx.globalAlpha = ha; ctx.translate(W / 2, H * (P ? .79 : .87)); ctx.scale(hs, hs); txt(String(sc.headline).toUpperCase(), 0, 0, P ? 110 : 84, "#FFD23F", { glow: "rgba(255,200,40,.9)" }); ctx.restore(); }
-    if (sc.subtext && ha > 0) { ctx.save(); ctx.globalAlpha = eout(clamp((u - .7) / .3)); txt(String(sc.subtext).toUpperCase(), W / 2, H * (P ? .79 : .87) + (P ? 100 : 74), P ? 50 : 40, "#fff"); ctx.restore(); }
+    if (sc.headline && ha > 0) { ctx.save(); ctx.globalAlpha = ha; ctx.translate(W / 2, H * (P ? .73 : .87)); ctx.scale(hs, hs); txt(String(sc.headline).toUpperCase(), 0, 0, P ? 110 : 84, "#FFD23F", { glow: "rgba(255,200,40,.9)" }); ctx.restore(); }
+    if (sc.subtext && ha > 0) { ctx.save(); ctx.globalAlpha = eout(clamp((u - .7) / .3)); txt(String(sc.subtext).toUpperCase(), W / 2, H * (P ? .73 : .87) + (P ? 100 : 74), P ? 50 : 40, "#fff"); ctx.restore(); }
     if (u > .4) for (let i = 0; i < 70; i++) { const sp = 260 + h01(i, 1) * 360, yy = ((u - .4) * sp + h01(i, 2) * H * 1.2) % (H * 1.2) - H * .1, xx = h01(i, 4) * W + Math.sin(u * 3 + i) * 20; // confetti
       ctx.save(); ctx.translate(xx, yy); ctx.rotate(u * (2 + h01(i, 5) * 4) + i); ctx.fillStyle = ["#FFD23F", "#fde68a", "#f59e0b", "#fff"][i % 4]; ctx.globalAlpha = .9; ctx.fillRect(-7, -4, 14, 8); ctx.restore(); }
   }
