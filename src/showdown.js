@@ -150,7 +150,7 @@ const SD = (() => {
   function lineup(sc, u, B, t) {
     const n = sc.members.length, P = PT(), right = (sc.align || "right") !== "left", dir = right ? 1 : -1, look = -dir * .55;
     const R0 = P ? 280 : 230, x0 = right ? W * (P ? .69 : .66) : W * (P ? .31 : .34), xe = right ? W * (P ? .1 : .2) : W * (P ? .9 : .8), gy = H * (P ? .64 : .8);
-    badge(W / 2, H * (P ? .13 : .14), P ? 118 : 96, sc.badge || "ASEAN", eout(clamp(u / .35)));
+    if (sc.badge !== false) badge(W / 2, H * (P ? .13 : .14), P ? 118 : 96, sc.badge || "ASEAN", eout(clamp(u / .35))); // "badge": false hides it
     if (sc.title) txt(String(sc.title).toUpperCase(), W / 2, H * (P ? .13 : .14) + (P ? 188 : 148), P ? 64 : 54, "#fff", { glow: "rgba(255,210,63,.35)" });
     // spacing: each ball shows its right eye past the ball in front of it (left edge of the front ball sits ~0.42 r right of the back ball's centre);
     // if the row is wider than the frame, every ball shrinks to fit
@@ -160,10 +160,10 @@ const SD = (() => {
     for (let i = n - 1; i >= 0; i--) {
       const m = sc.members[i], s = sz(i), r = Rf * s, tx = xs - dir * off[i] * Rf, ty = gy - i * Rf * .16;
       const a0 = .12 + i * .1, k = i === 0 ? eout(clamp(u / .3)) : back(clamp((u - a0) / .42)), x = i === 0 ? xs + dir * (1 - k) * W * .5 : lerp(xs, tx, k);
-      const E = eyeAt(m.eyeStart || "normal", m.eyeEnd || "serious", sc.eyeDropAt ?? 1.4, u);
+      const E = eyeAt(m.eyeStart || "normal", m.eyeEnd || "serious", sc.eyeDropAt ?? 1.4, u), lk = m.look != null ? clamp(+m.look, -1, 1) : look; // "look": -1 left … 1 right (side-eye)
       const moving = i > 0 && u > a0 && u < a0 + .42; // short motion blur while sliding out
-      if (moving) [.06, .03].forEach((dt, j) => { const k2 = back(clamp((u - dt - a0) / .42)); ctx.save(); ctx.globalAlpha = j ? .25 : .12; ball(lerp(xs, tx, k2), ty, { r, code: m.code, E, look, dark: i * .13, t }); ctx.restore(); });
-      ball(x, ty, { r, code: m.code, E, look, dark: i * .13, sq: B.sq * S.I * (i ? .7 : 1), t });
+      if (moving) [.06, .03].forEach((dt, j) => { const k2 = back(clamp((u - dt - a0) / .42)); ctx.save(); ctx.globalAlpha = j ? .25 : .12; ball(lerp(xs, tx, k2), ty, { r, code: m.code, E, look: lk, dark: i * .13, t }); ctx.restore(); });
+      ball(x, ty, { r, code: m.code, E, look: lk, dark: i * .13, sq: B.sq * S.I * (i ? .7 : 1), t });
     }
   }
   function statBattle(sc, u, B, t) {
