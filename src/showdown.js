@@ -48,9 +48,9 @@ const SD = (() => {
       if (type === "champion") sc.code = String(s.code || "VN").toUpperCase();
       scenes.push(sc); t0 += d;
     });
-    const total = t0, bpm = clamp(+cfg.bpm || 130, 60, 200), I = clamp(cfg.beatIntensity ?? .8, 0, 1.5);
+    const total = t0, bpm = clamp(+cfg.bpm || 130, 60, 200), I = clamp(cfg.beatIntensity ?? .8, 0, 1.5), hard = String(cfg.beatStyle || "soft").toLowerCase() === "hard";
     const title = (cfg.scenes.find(s => s.title) || {}).title || (cfg.scenes.find(s => s.headline) || {}).headline || "countryball-showdown";
-    return { showdown: true, cfg: Object.assign({ title }, cfg), scenes, total, bpm, I, beats: grid(total, bpm, +cfg.beatOffset || 0), items: [], bad,
+    return { showdown: true, cfg: Object.assign({ title }, cfg), scenes, total, bpm, I, hard, beats: grid(total, bpm, +cfg.beatOffset || 0), items: [], bad,
       st: [], dur: [], pause: [], intro: 0, itemsT: total, out: 0, end: 0, e0: total, spotT: 0 };
   }
   const grid = (D, bpm, off) => { const b = [], p = 60 / bpm; for (let x = off; x < D + p; x += p) if (x >= 0) b.push(x); return b; };
@@ -66,12 +66,14 @@ const SD = (() => {
     const L = buf.duration, all = []; for (let k = 0; k * L < D + 1; k++) out.forEach(x => all.push(x + k * L)); // the track loops
     return all.filter(x => x < D + 1);
   }
-  function beatsFor(S0, fileBuf) { const auto = !document.getElementById("sbeat") || document.getElementById("sbeat").checked;
-    return (auto && fileBuf && S0.cfg.beatSync !== false && detectBeats(fileBuf, S0.total)) || grid(S0.total, S0.bpm, +S0.cfg.beatOffset || 0); }
+  function beatsFor(S0, fileBuf) { const auto = !document.getElementById("sbeat") || document.getElementById("sbeat").checked, fb = auto && fileBuf && S0.cfg.beatSync !== false && detectBeats(fileBuf, S0.total);
+    S0.fileBeats = !!fb; return fb || grid(S0.total, S0.bpm, +S0.cfg.beatOffset || 0); }
   function beatEnv(t) { // time since the last beat → punch envelope; hits = scene cuts and the champion drop count double
     const B = S.beats; let lo = 0, hi = B.length - 1, k = -1; while (lo <= hi) { const m = (lo + hi) >> 1; if (B[m] <= t) { k = m; lo = m + 1; } else hi = m - 1; }
+    if (!S.hard && k >= 0 && !S.fileBeats && k % 2) k--; // soft: half-time pulse
     const db = k >= 0 ? t - B[k] : 9; let hit = 9; S.scenes.forEach(s => { if (t >= s.t0) hit = Math.min(hit, t - s.t0); if (s.type === "lineup" && s.eyeDropAt != null && t >= s.t0 + s.eyeDropAt) hit = Math.min(hit, t - s.t0 - s.eyeDropAt); });
-    return { e: Math.exp(-db * 13), sq: Math.exp(-db * 9) * Math.cos(db * 24), hit: Math.exp(-hit * 7), db, k };
+    return S.hard ? { e: Math.exp(-db * 13), sq: Math.exp(-db * 9) * Math.cos(db * 24), hit: Math.exp(-hit * 7), db, k }
+      : { e: Math.exp(-db * 5) * Math.min(1, db * 30), sq: .55 * Math.exp(-db * 4.5) * Math.sin(Math.min(Math.PI, db * 9) + .3), hit: Math.exp(-hit * 7), db, k };
   }
 
   // ---------- drawing helpers ----------
@@ -237,7 +239,7 @@ const SD = (() => {
   function draw(t) {
     ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.shadowBlur = 0;
     const sc = S.scenes.find(s => t >= s.t0 && t < s.t0 + s.d) || S.scenes[S.scenes.length - 1], u = t - sc.t0, B = beatEnv(t), I = S.I;
-    const champHit = sc.type === "champion" ? Math.exp(-u * 4) : 0, z = 1 + .045 * I * B.e + .09 * champHit, sh = (3 + 3 * I) * B.e + 14 * champHit;
+    const champHit = sc.type === "champion" ? Math.exp(-u * 4) : 0, z = 1 + (S.hard ? .045 : .022) * I * B.e + (S.hard ? .09 : .05) * champHit, sh = S.hard ? (3 + 3 * I) * B.e + 14 * champHit : 1.2 * I * B.e + 6 * champHit;
     background(t, sc.type === "champion" ? 1.25 : 1);
     ctx.translate(W / 2 + Math.sin(t * 97) * sh, H / 2 + Math.cos(t * 83) * sh); ctx.scale(z, z); ctx.translate(-W / 2, -H / 2);
     if (sc.type === "lineup") lineup(sc, u, B, t); else if (sc.type === "stat_battle") statBattle(sc, u, B, t); else champion(sc, u, B, t);
@@ -251,7 +253,8 @@ const SD = (() => {
   }
 
   // ---------- sound: phonk-style beat at the video's bpm, plus whooshes, hits, a riser and a glint ----------
-  function audio(oc, out, fileBuf) {
+  function audio(oc, out0, fileBuf) {
+    const lim = oc.createDynamicsCompressor(); lim.threshold.value = -8; lim.ratio.value = 12; lim.attack.value = .003; lim.release.value = .15; const out = oc.createGain(); out.gain.value = .8; out.connect(lim).connect(out0); // keep peaks under 0 dB
     const D = S.total, sr = oc.sampleRate, beat = 60 / S.bpm;
     const noise = (() => { const b = oc.createBuffer(1, sr, sr), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = h01(i, 11) * 2 - 1; return b; })();
     const nz = (t0, dur, type, f0, f1, g, q = 1) => { const s = oc.createBufferSource(), f = oc.createBiquadFilter(), e = oc.createGain(); s.buffer = noise; s.loop = true; f.type = type; f.Q.value = q;
@@ -261,7 +264,22 @@ const SD = (() => {
       e.gain.setValueAtTime(.0001, t0); e.gain.exponentialRampToValueAtTime(g, t0 + .008); e.gain.exponentialRampToValueAtTime(.0001, t0 + .9); o.connect(e).connect(out); o.start(t0); o.stop(t0 + 1); };
     if (fileBuf) { const b = oc.createBufferSource(), g = oc.createGain(); b.buffer = fileBuf; b.loop = true; g.gain.value = .9; b.connect(g).connect(out); b.start(0); }
     else if ($("music").value !== "off") {
-      const sat = oc.createWaveShaper(), cv = new Float32Array(1024); for (let i = 0; i < 1024; i++) { const x = i / 512 - 1; cv[i] = Math.tanh(x * 2.4); } sat.curve = cv; const bus = oc.createGain(); bus.gain.value = .55; sat.connect(bus).connect(out);
+      const sat = oc.createWaveShaper(), cv = new Float32Array(1024); for (let i = 0; i < 1024; i++) { const x = i / 512 - 1; cv[i] = Math.tanh(x * (S.hard ? 2.4 : 1.1)); } sat.curve = cv; const bus = oc.createGain(); bus.gain.value = .55; sat.connect(bus).connect(out);
+      if (!S.hard) { // soft: half-time 808 + one clap a bar, light hats on 8ths, a quiet bell line and a warm pad (E minor)
+        const pad = oc.createGain(); pad.gain.value = .5; pad.connect(out); const lpf = oc.createBiquadFilter(); lpf.type = "lowpass"; lpf.frequency.value = 1400; lpf.connect(pad);
+        const CH = [[52, 55, 59, 64], [48, 52, 55, 60], [50, 54, 57, 62], [47, 50, 54, 59]], BELL = [76, 74, 71, 74, 76, 79, 76, 71];
+        for (let bar = 0, tb = 0; tb < D; bar++, tb = bar * beat * 4) {
+          CH[bar % 4].forEach(m => [.996, 1.004].forEach(dt => { const o = oc.createOscillator(), e = oc.createGain(); o.type = "triangle"; o.frequency.value = 440 * Math.pow(2, (m - 69) / 12) * dt;
+            e.gain.setValueAtTime(.0001, tb); e.gain.linearRampToValueAtTime(.022, tb + .25); e.gain.setValueAtTime(.022, tb + beat * 3.6); e.gain.linearRampToValueAtTime(.0001, tb + beat * 4.2); o.connect(e).connect(lpf); o.start(tb); o.stop(tb + beat * 4.3); }));
+          [0, 2.5].forEach(bb => { const t0 = tb + bb * beat; if (t0 >= D) return; const o = oc.createOscillator(), e = oc.createGain(), root = [40, 36, 38, 35][bar % 4];
+            o.frequency.setValueAtTime(440 * Math.pow(2, (root - 69) / 12) * 1.6, t0); o.frequency.exponentialRampToValueAtTime(440 * Math.pow(2, (root - 69) / 12), t0 + .06);
+            e.gain.setValueAtTime(.0001, t0); e.gain.exponentialRampToValueAtTime(bb ? .45 : .6, t0 + .01); e.gain.exponentialRampToValueAtTime(.0001, t0 + beat * 1.6); o.connect(e).connect(sat); o.start(t0); o.stop(t0 + beat * 1.7); });
+          nz(tb + 2 * beat, .22, "bandpass", 1600, 1100, .14, .7);
+          for (let q = 0; q < 8; q++) nz(tb + q * beat / 2, .025, "highpass", 8500, 9500, q % 2 ? .018 : .03);
+          BELL.forEach((m, q) => { const ts = tb + q * beat / 2; if (q % 2 && bar % 2 === 0) return; const c = oc.createOscillator(), e2 = oc.createGain(); c.type = "sine"; c.frequency.value = 440 * Math.pow(2, (m - 69) / 12);
+            e2.gain.setValueAtTime(.0001, ts); e2.gain.exponentialRampToValueAtTime(.035, ts + .005); e2.gain.exponentialRampToValueAtTime(.0001, ts + .5); c.connect(e2).connect(out); c.start(ts); c.stop(ts + .55); });
+        }
+      } else {
       const COW = [1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1], NOTES = [0, 0, 3, 0, 5, 3, 7, 5, 0, 0, 3, 0, 10, 7, 5, 3], ROOT = 64; // E minor-ish cowbell line
       for (let k = 0, t0 = 0; t0 < D; k++, t0 = k * beat) {
         const o = oc.createOscillator(), e = oc.createGain(); o.frequency.setValueAtTime(k % 8 === 6 ? 62 : 55, t0); o.frequency.exponentialRampToValueAtTime(36, t0 + beat * .9); // 808
@@ -271,10 +289,11 @@ const SD = (() => {
           if (COW[idx]) [1, 1.48].forEach(m => { const c = oc.createOscillator(), f = oc.createBiquadFilter(), e2 = oc.createGain(); c.type = "square"; c.frequency.value = 440 * Math.pow(2, (ROOT + NOTES[idx] - 69) / 12) * m;
             f.type = "bandpass"; f.frequency.value = 900; f.Q.value = 2; e2.gain.setValueAtTime(.0001, ts); e2.gain.exponentialRampToValueAtTime(.05, ts + .004); e2.gain.exponentialRampToValueAtTime(.0001, ts + .22); c.connect(f).connect(e2).connect(out); c.start(ts); c.stop(ts + .25); }); }
       }
+      }
     }
     S.scenes.forEach(sc => {
-      if (sc.i) boom(sc.t0, .45);
-      if (sc.type === "lineup") { sc.members.forEach((m, i) => { if (i) nz(sc.t0 + .12 + i * .1, .32, "bandpass", 500, 3500, .12, 1.2); }); if (sc.eyeDropAt != null) boom(sc.t0 + sc.eyeDropAt, .5, 90); }
+      if (sc.i) boom(sc.t0, S.hard ? .45 : .3);
+      if (sc.type === "lineup") { sc.members.forEach((m, i) => { if (i) nz(sc.t0 + .12 + i * .1, .32, "bandpass", 500, 3500, .12, 1.2); }); if (sc.eyeDropAt != null) boom(sc.t0 + sc.eyeDropAt, S.hard ? .5 : .35, 90); }
       if (sc.type === "stat_battle") { const rv = sc.t0 + Math.min(sc.d * .55, 1.45); nz(sc.t0 + .2, rv - sc.t0 - .2, "bandpass", 400, 4000, .05, 2); boom(rv, .4, 110); }
       if (sc.type === "champion") { nz(Math.max(0, sc.t0 - 1.2), 1.2, "bandpass", 300, 6000, .12, 3); boom(sc.t0, .85, 80);
         const p = sc.props || {}; if (p.sunglasses) { const tg = sc.t0 + .83; [2093, 2637, 3136].forEach((f, j) => { const o = oc.createOscillator(), e = oc.createGain(); o.type = "sine"; o.frequency.value = f; e.gain.setValueAtTime(.0001, tg + j * .03); e.gain.exponentialRampToValueAtTime(.08, tg + j * .03 + .005); e.gain.exponentialRampToValueAtTime(.0001, tg + j * .03 + .6); o.connect(e).connect(out); o.start(tg + j * .03); o.stop(tg + .7); }); }
