@@ -1802,7 +1802,9 @@ $("fmt").onchange = () => { if (exporting) return; applyFormat(); if (GJ) { setu
 // ---------- Tab 2: Countryball Showdown (showdown.js); Tab 1 above is untouched ----------
 let TAB = 1;
 function runShowdown() {
-  try { S = SD.build(JSON.parse($("scode").value)); t = 0; playing = true; $("play").textContent = "Tạm dừng"; stopAudio(); renderTrack();
+  try { const j = JSON.parse($("scode").value), fv = { tiktok: "tiktok", shorts: "port", "9:16": "port", youtube: "land", "16:9": "land" }[String(j.format || "").toLowerCase()];
+    if (fv && $("sfmt").value !== fv && !exporting) { $("sfmt").value = fv; $("fmt").value = fv; applyFormat(); if (GJ) setup(GJ); } // "format" in the code picks the frame
+    S = SD.build(j); t = 0; playing = true; $("play").textContent = "Tạm dừng"; stopAudio(); renderTrack();
     ["play", "seek", "export"].forEach(id => $(id).disabled = false);
     say($("smsg"), S.bad.length ? "Đã chạy, nhưng không nhận ra mã nước: " + S.bad.join(", ") : "Đã chạy: " + S.scenes.length + " cảnh, dài " + mmss(S.total) + ".", S.bad.length);
   } catch (e) { say($("smsg"), e instanceof SyntaxError ? "Code chưa đúng định dạng JSON: " + e.message : e.message, true); }
