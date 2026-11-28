@@ -11,7 +11,7 @@ const SD = (() => {
         items: [{ code: "VN", value: 1.65, label: "Vietnam" }, { code: "ID", value: 0.65, label: "Indonesia" }, { code: "LA", value: 0.03, label: "Laos" }, { code: "TH", value: 0.02, label: "Thailand" }] },
       { type: "stat_battle", duration: 3.0, category: "GDP GROWTH RATE", unit: "%", winner: "VN",
         items: [{ code: "VN", value: 7.1, label: "Vietnam" }, { code: "PH", value: 5.8, label: "Philippines" }, { code: "ID", value: 5.1, label: "Indonesia" }, { code: "MY", value: 4.9, label: "Malaysia" }] },
-      { type: "champion", duration: 4.0, code: "VN", headline: "TOP 1 ASEAN", subtext: "VIETNAM DOMINATES", props: { sunglasses: true, cigar: true, trophy: true, crown: false } }
+      { type: "champion", duration: 4.0, code: "VN", headline: "TOP 1 ASEAN", subtext: "VIETNAM DOMINATES", props: { sunglasses: true, cigar: false, trophy: true, crown: false } }
     ]
   };
   const NAMES = { VN: "Vietnam", ID: "Indonesia", MY: "Malaysia", TH: "Thailand", SG: "Singapore", PH: "Philippines", LA: "Laos", KH: "Cambodia", MM: "Myanmar", BN: "Brunei", TL: "Timor-Leste", CN: "China", JP: "Japan", KR: "South Korea", IN: "India", US: "United States" };
@@ -232,8 +232,8 @@ const SD = (() => {
     if (props.sunglasses) { const d = clamp((u - sgAt) / .28), dy = (1 - eout(d)) * -(G.ey + r); if (u > sgAt) glasses(G.cx, G.ey, r, 0, 1, dy);
       const fl = clamp((u - sgAt - .28) / .35); if (fl > 0 && fl < 1) { star(G.cx - r * .52, G.ey - r * .1, r * .35 * Math.sin(fl * Math.PI), 1); star(G.cx + r * .3, G.ey - r * .12, r * .2 * Math.sin(fl * Math.PI), .8); } }
     if (props.cigar) cigar(G, r, props.sunglasses ? .95 : .5, u);
-    if (props.trophy) { const tk = back(clamp((u - 1.2) / .35)); if (tk > 0) { const ts = r * .95 * tk, tx = G.cx + (P ? -r * 1.05 : r * 1.55), ty = gy + 6 - B.e * r * .05 - Math.sin(u * 3) * 6;
-      shadow(tx, gy + 6, ts * .45, .5); ctx.save(); ctx.translate(tx, ty); ctx.rotate(-12 * Math.PI / 180); ctx.shadowColor = "rgba(0,0,0,.85)"; ctx.shadowBlur = ts * .35; ctx.shadowOffsetY = ts * .05; trophy(0, 0, ts, t, (u - 1.2) * .7); ctx.restore(); for (let i = 0; i < 5; i++) { const q = (u * .9 + i * .21) % 1; star(tx + (h01(i, 7) - .5) * ts * 1.1, ty - ts * (.2 + h01(i, 9) * .9), ts * .09, Math.sin(q * Math.PI)); } } }
+    if (props.trophy) { const hug = props.trophy !== "side", t0 = props.sunglasses ? 1.2 : .45, tk = back(clamp((u - t0) / .35)); if (tk > 0) { const ts = r * (hug ? .82 : .95) * tk, tx = hug ? G.cx + r * .12 : G.cx + (P ? -r * 1.05 : r * 1.55), ty = (hug ? gy + r * .08 : gy + 6) - B.e * r * .05 - Math.sin(u * 3) * 6; // hug: held in front of the ball
+      shadow(tx, gy + 6, ts * .45, .5); ctx.save(); ctx.translate(tx, ty); ctx.rotate(-12 * Math.PI / 180); ctx.shadowColor = "rgba(0,0,0,.85)"; ctx.shadowBlur = ts * .35; ctx.shadowOffsetY = ts * .05; trophy(0, 0, ts, t, (u - t0) * .7); ctx.restore(); for (let i = 0; i < 5; i++) { const q = (u * .9 + i * .21) % 1; star(tx + (h01(i, 7) - .5) * ts * 1.1, ty - ts * (.2 + h01(i, 9) * .9), ts * .09, Math.sin(q * Math.PI)); } } }
     const ha = eout(clamp((u - .4) / .3)), hs = 1 + .05 * B.e;
     if (sc.headline && ha > 0) { ctx.save(); ctx.globalAlpha = ha; ctx.translate(W / 2, H * (P ? .73 : .87)); ctx.scale(hs, hs); txt(String(sc.headline).toUpperCase(), 0, 0, P ? 110 : 84, "#FFD23F", { glow: "rgba(255,200,40,.9)" }); ctx.restore(); }
     if (sc.subtext && ha > 0) { ctx.save(); ctx.globalAlpha = eout(clamp((u - .7) / .3)); txt(String(sc.subtext).toUpperCase(), W / 2, H * (P ? .73 : .87) + (P ? 100 : 74), P ? 50 : 40, "#fff"); ctx.restore(); }
@@ -303,7 +303,7 @@ const SD = (() => {
       if (sc.type === "stat_battle") { const rv = sc.t0 + Math.min(sc.d * .55, 1.45); nz(sc.t0 + .2, rv - sc.t0 - .2, "bandpass", 400, 4000, .05, 2); boom(rv, .4, 110); }
       if (sc.type === "champion") { nz(Math.max(0, sc.t0 - 1.2), 1.2, "bandpass", 300, 6000, .12, 3); boom(sc.t0, .85, 80);
         const p = sc.props || {}; if (p.sunglasses) { const tg = sc.t0 + .83; [2093, 2637, 3136].forEach((f, j) => { const o = oc.createOscillator(), e = oc.createGain(); o.type = "sine"; o.frequency.value = f; e.gain.setValueAtTime(.0001, tg + j * .03); e.gain.exponentialRampToValueAtTime(.08, tg + j * .03 + .005); e.gain.exponentialRampToValueAtTime(.0001, tg + j * .03 + .6); o.connect(e).connect(out); o.start(tg + j * .03); o.stop(tg + .7); }); }
-        if (p.trophy) nz(sc.t0 + 1.2, .5, "highpass", 5000, 9000, .05); }
+        if (p.trophy) nz(sc.t0 + (p.sunglasses ? 1.2 : .45), .5, "highpass", 5000, 9000, .05); }
     });
   }
   return { SAMPLE, build, draw, audio, beatsFor };
