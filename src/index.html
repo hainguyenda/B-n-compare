@@ -45,7 +45,7 @@
       <span class="msg" style="color:var(--text)">Khung hình:</span>
       <select id="fmt"><option value="land">16:9 · YouTube</option><option value="port">9:16 · YouTube Shorts</option><option value="tiktok">9:16 · TikTok</option></select>
       <span class="msg" style="color:var(--text)">Kiểu hình:</span>
-      <select id="vmode"><option value="auto">Theo code (mode)</option><option value="map">Bản đồ sáng lên</option><option value="stack">Cột 3D to dần</option><option value="stack2">Cột 3D v2 (xếp từng khối)</option><option value="ballstack">Countryball ngồi trên đống xe / cột</option><option value="split">Cột 3D + bản đồ nhỏ</option><option value="ball">Countryball nhí nhảnh</option><option value="globe">Quả địa cầu xoay</option><option value="bubble">Bong bóng trên bản đồ</option><option value="race">Đường đua</option></select>
+      <select id="vmode"><option value="auto">Theo code (mode)</option><option value="map">Bản đồ sáng lên</option><option value="stack">Cột 3D to dần</option><option value="stack2">Cột 3D v2 (xếp từng khối)</option><option value="feast">Bóng há miệng ăn (to dần, ợ, cúp)</option><option value="ballstack">Countryball ngồi trên đống xe / cột</option><option value="split">Cột 3D + bản đồ nhỏ</option><option value="ball">Countryball nhí nhảnh</option><option value="globe">Quả địa cầu xoay</option><option value="bubble">Bong bóng trên bản đồ</option><option value="race">Đường đua</option></select>
       <span class="msg" style="color:var(--text)">Nền bóng:</span>
       <select id="btheme"><option value="auto">Tự đổi (trời xanh → hoàng hôn)</option><option value="comic_sky">Trời xanh</option><option value="sunset_drama">Hoàng hôn</option><option value="studio_dark">Studio tối</option></select>
       <span id="msg" class="msg">Đang tải bản đồ…</span>
@@ -120,7 +120,7 @@
       <tr><td>question</td><td>Câu hỏi hiện ở cuối chế độ quick, ví dụ "Did you guess #1? Tell us below".</td></tr>
       <tr><td>suspense</td><td>Số giây dừng lại trước nước #1 (mặc định 0.9 Shorts / 1.1 video dài). Đặt 0 để tắt.</td></tr>
       <tr><td>music</td><td>"gen" · "fast" (nhịp nhanh cho Shorts) · "off". Bạn vẫn có thể chọn file nhạc riêng ở ô Nhạc nền.</td></tr>
-      <tr><td>mode</td><td>"map": bản đồ sáng lên · "stack": cột 3D to dần, nước đứng đầu vọt lên cuối video · "split": cột 3D kèm bản đồ nhỏ góc phải. Có thể ép bằng ô "Kiểu hình". · "globe": quả địa cầu xoay tới từng nước, cột sáng cao theo giá trị · "bubble": bong bóng to theo giá trị mọc lên trên bản đồ · "race": đường đua, mỗi nước một làn, cùng xuất phát, nước nào hết số liệu thì dừng và hiện hạng, #1 về đích (nên dùng tối đa ~12 nước) · "stack2": Cột 3D v2 (chữ to, xếp từng khối, #1 phá khung, bảng tổng kết cuối) — bản "stack" vẫn giữ nguyên · "ballstack": countryball ngồi trên đỉnh một đống, chạy giống "stack2" (từng tầng rơi xuống, #1 phá khung, bảng tổng kết); với "stack": "cars" là đống xe hơi hoạt hình, chất liệu khác thì bóng ngồi trên cột 3D; nền trời theo ô "Nền bóng"</td></tr>
+      <tr><td>mode</td><td>"map": bản đồ sáng lên · "stack": cột 3D to dần, nước đứng đầu vọt lên cuối video · "split": cột 3D kèm bản đồ nhỏ góc phải. Có thể ép bằng ô "Kiểu hình". · "globe": quả địa cầu xoay tới từng nước, cột sáng cao theo giá trị · "bubble": bong bóng to theo giá trị mọc lên trên bản đồ · "race": đường đua, mỗi nước một làn, cùng xuất phát, nước nào hết số liệu thì dừng và hiện hạng, #1 về đích (nên dùng tối đa ~12 nước) · "stack2": Cột 3D v2 (chữ to, xếp từng khối, #1 phá khung, bảng tổng kết cuối) — bản "stack" vẫn giữ nguyên · "feast": mỗi nước là một quả bóng há miệng, đoàn người tí hon kéo vali chạy ùa vào, bóng to dần đến đúng số rồi nhai; cuối video quả to nhất ợ "BURP!", rồi đeo kính đen, đội vương miện và ôm cúp (hợp với khách du lịch, dân số…) · "ballstack": countryball ngồi trên đỉnh một đống, chạy giống "stack2" (từng tầng rơi xuống, #1 phá khung, bảng tổng kết); với "stack": "cars" là đống xe hơi hoạt hình, chất liệu khác thì bóng ngồi trên cột 3D; nền trời theo ô "Nền bóng"</td></tr>
       <tr><td>visualStyle, ballTheme</td><td>"visualStyle": "countryball" bật chế độ bóng quốc gia nhí nhảnh (hoặc chọn ô Kiểu hình = Countryball nhí nhảnh; cũng có thể viết "mode": "ball"). "ballTheme": "comic_sky" (trời xanh) · "sunset_drama" (hoàng hôn) · "studio_dark" (nền tối). Bỏ trống thì tự đổi từ trời xanh sang hoàng hôn khi vào Top 3.</td></tr>
       <tr><td>stack</td><td>Chất liệu cột: "people" (đám đông) · "money" (tiền) · "gold" (vàng) · "oil" (thùng dầu) · "crops" (nông sản) · "cubes" (khối màu) · "cars" (đống xe hơi, dùng với mode "ballstack"). Bỏ trống thì app tự đoán theo tiêu đề.</td></tr>
       <tr><td>scale</td><td>"linear" (mặc định) · "hybrid" khi nước đầu quá vượt trội · "volume" lấy căn bậc 3.</td></tr>
@@ -1201,8 +1201,8 @@ function build(cfg) {
   const quiz = order === "countdown" && items.length >= 3 ? quizOf(cfg, sorted) : null; // asked in the intro, answered when #1 shows up
   const intro0 = cfg.introSeconds ?? (PORT ? 2.5 : 3), intro = quiz ? Math.max(intro0, PORT ? 3 : 4.2) : intro0, per = cfg.secondsPerCountry ?? (PORT ? 1.6 : 2.4); // Shorts: ~1.6 s per country (the 1K-view pace)
   const outMode = /^(quick|loop|full)$/.test(cfg.outroMode || "") ? cfg.outroMode : (PORT || !cfg.outro ? "quick" : "full");
-  const out = outMode === "loop" ? 1.2 : outMode === "quick" ? (cfg.outroSeconds ?? 2.6) : (cfg.outro ? (cfg.outroSeconds ?? 5.5) : 1.5);
-  const sus = (curMode() !== "map" || curMode(cfg) === "ball") && order === "countdown" && items.length >= 3 ? (cfg.suspense ?? (PORT ? .9 : 1.1)) : 0;
+  const out = outMode === "loop" ? 1.2 : outMode === "quick" ? (cfg.outroSeconds ?? (curMode(cfg) === "feast" ? 5.2 : 2.6)) : (cfg.outro ? (cfg.outroSeconds ?? 5.5) : 1.5);
+  const sus = (curMode() !== "map" || curMode(cfg) === "ball" || curMode(cfg) === "feast") && order === "countdown" && items.length >= 3 ? (cfg.suspense ?? (PORT ? .9 : 1.1)) : 0;
   const spot = spotOf(cfg, items), spotT = spot && !spot.item ? 2.8 : 0;
   const mult = r => cfg.pace === "even" ? 1 : items.length <= 12 ? (r > 3 ? .75 : r > 1 ? 1.05 : 1.1) : (r > 20 ? .7 : r > 10 ? .85 : r > 3 ? 1 : r > 1 ? 1.15 : 1.25);
   const dur = items.map((x, i) => per * mult(x.rank) + (i === items.length - 1 ? sus : 0)), pause = items.map((x, i) => i === items.length - 1 ? sus : 0);
@@ -1261,7 +1261,7 @@ function quizOf(cfg, sorted) { // cfg.quiz: true (auto: #1 + two runners-up) or 
   const one = sorted[0], find = v => { const k = String(v).trim(), u = k.toUpperCase(), l = k.toLowerCase(); return sorted.find(x => x.code === u || String(x.name).toLowerCase() === l); };
   let opts;
   if (Array.isArray(cfg.quiz)) opts = cfg.quiz.slice(0, 4).map(v => { const x = find(v); return x ? { name: x.name, code: x.code } : { name: String(v), code: /^[A-Z]{2}$/.test(String(v)) ? String(v) : "" }; });
-  else { const md = curMode(cfg), podium = cfg.hook !== false && (md === "stack" || md === "stack2" || md === "ballstack" || md === "split" || md === "ball") && sorted.length >= 5; // the podium already shows #2 and #3
+  else { const md = curMode(cfg), podium = cfg.hook !== false && (md === "stack" || md === "stack2" || md === "ballstack" || md === "split" || md === "ball" || md === "feast") && sorted.length >= 5; // the podium already shows #2 and #3
     const pool = (podium ? sorted.slice(3, 5) : sorted.slice(1, 3)).map(x => ({ name: x.name, code: x.code })), at = String(cfg.title || "").length % 3; opts = pool.slice(); opts.splice(Math.min(at, opts.length), 0, { name: one.name, code: one.code }); }
   if (!opts.some(o => o.code === one.code || o.name === one.name)) opts[opts.length - 1] = { name: one.name, code: one.code };
   return { opts, answer: opts.findIndex(o => o.code === one.code || o.name === one.name), title: String(cfg.quizTitle || "WHO IS #1?"), cta: String(cfg.quizCta || "Comment A, B or C") };
@@ -1377,7 +1377,7 @@ function draw(t) {
 }
 function drawScene(t) {
   if (S && S.showdown) { SD.draw(t); return; } // Tab 2
-  { const md = curMode(); if (md === "ball") { drawBallFrame(t); overlays(t); return; } if (md === "globe") { drawGlobeFrame(t); overlays(t); return; } if (md === "race") { drawRaceFrame(t); overlays(t); return; } if (md === "stack2" || md === "ballstack") { drawStack2Frame(t); overlays(t); return; } if (md !== "map" && md !== "bubble") { drawStackFrame(t, md); overlays(t); return; } }
+  { const md = curMode(); if (md === "ball") { drawBallFrame(t); overlays(t); return; } if (md === "feast") { FEAST.draw(t); overlays(t); return; } if (md === "globe") { drawGlobeFrame(t); overlays(t); return; } if (md === "race") { drawRaceFrame(t); overlays(t); return; } if (md === "stack2" || md === "ballstack") { drawStack2Frame(t); overlays(t); return; } if (md !== "map" && md !== "bubble") { drawStackFrame(t, md); overlays(t); return; } }
   const { cfg, items, intro, per, total, accent } = S, n = items.length;
   ctx.globalAlpha = 1; ctx.shadowBlur = 0; ctx.textAlign = "left"; ctx.drawImage(base, 0, 0);
   const ci = ciAt(t), inOut = ci >= n;
@@ -1567,7 +1567,8 @@ async function renderTrack() {
   if (mode === "file") { const b = oc.createBufferSource(); b.buffer = userBuf; b.loop = true; const g = oc.createGain(); g.gain.value = .85; b.connect(g).connect(out); b.start(0); }
   else { const b = oc.createBufferSource(); b.buffer = loopBuf; b.loop = true; b.connect(out); b.start(0); }
   const pent = [-12, -10, -8, -5, -3, 0, 2, 4, 7, 9, 12, 14, 16, 19, 21];
-  if (curMode() === "ball") { // cartoon sounds: boing for each ball, heavy thud for top 3 / #1, victory chime for #1
+  if (curMode() === "feast") FEAST.sfx(oc, out); // chomp, burp, glints
+  if (curMode() === "ball" || curMode() === "feast") { // cartoon sounds: boing for each ball, heavy thud for top 3 / #1, victory chime for #1
     const sfx = CountryballEngine.scheduleCartoonSfxOffline;
     if (S.cfg.hook !== false) sfx(oc, out, .28, "gasp_drop", .4);
     S.items.forEach((x, i) => { const t0 = S.intro + S.st[i], p = S.pause[i], tr = t0 + p;
@@ -1831,5 +1832,6 @@ requestAnimationFrame(frame);
 </script>
 <script src="ball.js"></script>
 <script src="showdown.js"></script>
+<script src="feast.js"></script>
 </body>
 </html>

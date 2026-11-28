@@ -72,3 +72,7 @@ Khung **9:16 · TikTok** vẽ cảnh 9:16 bình thường rồi thu nhỏ 80% v�
 Nút **Countryball Showdown** ở đầu trang mở studio thứ hai (code trong `src/showdown.js`), dùng chung khung xem trước, nhạc nền và bộ xuất MP4 với Tab 1 (Tab 1 không đổi). Code là một danh sách `scenes`:
 `lineup` (dàn hàng xéo, bóng sau trượt ra từ sau bóng trước có motion blur, `eyeDropAt` đổi mắt sang mắt bèn đúng nhịp bass), `stat_battle` (2–5 nước, thanh số chạy, nước thắng sáng vàng, nước thua mắt run và tối đi), `champion` (bóng vô địch trượt vào giữa, tia sáng xoay, phụ kiện `sunglasses` / `cigar` / `trophy` / `crown`, mưa kim tuyến).
 Mắt: `normal`, `serious`, `angry`, `shocked`, `cool`, chuyển mượt trong 120 ms. `bpm`, `beatIntensity`: mỗi nhịp khung hình nhún zoom, rung nhẹ, bóng nhún dẹt. Nhạc tự tạo là beat kiểu phonk đúng bpm; với file nhạc riêng và **Auto Beat-Sync** bật, app dò nhịp bass trong file. Nút "Nạp mẫu ASEAN vs Việt Nam Top 1" có sẵn một video mẫu 13,5 giây.
+
+## Kiểu `feast` — bóng há miệng ăn
+
+`"mode": "feast"` (menu: "Bóng há miệng ăn"): từng nước là một quả bóng há miệng, đoàn người tí hon kéo vali chạy ùa vào từ bên phải rồi nhảy vào miệng, quả bóng to dần đến đúng số rồi nhai. Hạng 1 vẫn là bóng đen "?" cho tới lúc lộ. Cảnh cuối: camera lùi xem top 3 rồi áp sát #1, quả bóng ợ "BURP!", rơi kính đen, đội vương miện, ôm cúp, rồi hiện câu hỏi cuối. Có tiếng nhai, tiếng bước chân, tiếng ợ. Đi cùng câu đố, hook, thẻ Việt Nam như kiểu `ball`. Outro mặc định 5,2 giây.
